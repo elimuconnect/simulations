@@ -1638,80 +1638,87 @@ async function initializeApplication(){
         return;
     }
 
+/* ---------------------------------------------------------
+   TUTOR / ADMIN
+--------------------------------------------------------- */
 
-    /* ---------------------------------------------------------
-       TUTOR / ADMIN
-    --------------------------------------------------------- */
+if(
+    currentProfile.role === "tutor" ||
+    currentProfile.role === "admin"
+){
 
-    if(
-        currentProfile.role === "tutor" ||
-        currentProfile.role === "admin"
-    ){
-
-        const studentsResult =
-            await supabaseClient
-                .from("tuition_students")
-                .select("*")
-                .eq("active", true)
-                .order(
-                    "full_name",
-                    {
-                        ascending:true
-                    }
-                );
-
-        if(studentsResult.error){
-            throw studentsResult.error;
-        }
-
-
-        const students =
-            studentsResult.data || [];
-
-
-        /*
-           Select first learner by default.
-        */
-
-        if(students.length){
-
-            currentStudent =
-                students[0];
-
-        }else{
-
-            currentStudent =
-                null;
-
-        }
+    const studentsResult =
+        await supabaseClient
+            .from("tuition_students")
+            .select(`
+                id,
+                user_id,
+                full_name,
+                email,
+                grade_level,
+                country,
+                school_name,
+                target_exam,
+                target_exam_date,
+                active
+            `)
+            .eq("active", true)
+            .order("full_name", {
+                ascending: true
+            });
 
 
-        /*
-           Build tutor application.
-        */
+    if(studentsResult.error){
 
-        setupTutorApplication();
-
-
-        /*
-           Populate learner selector AFTER
-           tutor dashboard exists.
-        */
-
-        populateTutorStudentSelector(
-            students
+        console.error(
+            "TUITION STUDENTS ERROR:",
+            studentsResult.error
         );
 
+        throw studentsResult.error;
+    }
 
-        /*
-           Load dashboard for the selected learner.
-        */
+
+    const students =
+        Array.isArray(studentsResult.data)
+            ? studentsResult.data
+            : [];
+
+
+    console.log(
+        "TUITION ACTIVE LEARNERS:",
+        students
+    );
+
+
+    console.log(
+        "TUITION ACTIVE LEARNER COUNT:",
+        students.length
+    );
+
+
+    currentStudent =
+        students.length > 0
+            ? students[0]
+            : null;
+
+
+    setupTutorApplication();
+
+
+    populateTutorStudentSelector(
+        students
+    );
+
+
+    if(currentStudent){
 
         await loadTutorDashboard();
 
-        return;
     }
 
+    return;
+}
 
     /* ---------------------------------------------------------
        UNKNOWN ROLE
@@ -1779,21 +1786,37 @@ function setupTutorApplication(){
 
 
 
-
-async function populateTutorStudentSelector(students){
+function populateTutorStudentSelector(students){
 
     const selector =
         document.getElementById(
             "tutorStudentSelector"
         );
 
+
+    console.log(
+        "POPULATING LEARNER SELECTOR:",
+        students
+    );
+
+
     if(!selector){
+
+        console.error(
+            "tutorStudentSelector was NOT found in the HTML."
+        );
+
         return;
     }
 
+
     selector.innerHTML = "";
 
-    if(!students.length){
+
+    if(
+        !Array.isArray(students) ||
+        students.length === 0
+    ){
 
         selector.innerHTML = `
             <option value="">
@@ -1801,23 +1824,31 @@ async function populateTutorStudentSelector(students){
             </option>
         `;
 
+        console.warn(
+            "Selector received zero learners."
+        );
+
         return;
     }
+
 
     students.forEach(student => {
 
         const option =
             document.createElement("option");
 
+
         option.value =
             student.id;
 
+
         option.textContent =
-            `${student.full_name} ${
+            `${student.full_name || "Unnamed Learner"}${
                 student.grade_level
-                    ? `(Grade ${student.grade_level})`
+                    ? ` (Grade ${student.grade_level})`
                     : ""
             }`;
+
 
         if(
             currentStudent &&
@@ -1828,39 +1859,50 @@ async function populateTutorStudentSelector(students){
 
         }
 
-        selector.appendChild(option);
+
+        selector.appendChild(
+            option
+        );
 
     });
 
 
-    selector.addEventListener(
-        "change",
-        async () => {
+    selector.onchange =
+        async function(){
 
-            const studentId =
-                selector.value;
-
-            const selected =
+            const selectedStudent =
                 students.find(
                     student =>
-                        student.id === studentId
+                        student.id === this.value
                 );
 
-            if(!selected){
+
+            if(!selectedStudent){
+
+                console.error(
+                    "Learner not found:",
+                    this.value
+                );
+
                 return;
             }
 
+
             currentStudent =
-                selected;
+                selectedStudent;
+
+
+            console.log(
+                "CURRENT LEARNER:",
+                currentStudent
+            );
+
 
             await loadTutorDashboard();
 
-        }
-    );
+        };
 
 }
-
-
 
 
     
