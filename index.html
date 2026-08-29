@@ -837,6 +837,46 @@ th{
 
             <div id="tutorDashboard" class="view hidden">
 
+<div class="card" style="margin-bottom:18px">
+
+    <div class="section-head">
+
+        <div>
+            <div class="section-title">
+                Select Learner
+            </div>
+
+            <div class="muted">
+                Choose the learner whose preparation you want to manage.
+            </div>
+        </div>
+
+        <div style="min-width:260px">
+            <select
+                id="tutorStudentSelector"
+                style="
+                    width:100%;
+                    padding:11px 12px;
+                    border:1px solid #d6deea;
+                    border-radius:10px;
+                    background:#fff;
+                    outline:none;
+                "
+            >
+                <option value="">
+                    Loading learners...
+                </option>
+            </select>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+                
+
                 <div class="grid stats">
 
                     <div class="card">
@@ -1510,7 +1550,7 @@ async function initializeApplication(){
         await supabaseClient
             .from("tuition_profiles")
             .select("*")
-            .eq("id",user.id)
+            .eq("id", user.id)
             .maybeSingle();
 
     if(profileResult.error){
@@ -1520,6 +1560,10 @@ async function initializeApplication(){
     currentProfile =
         profileResult.data;
 
+
+    /* ---------------------------------------------------------
+       PROFILE NOT FOUND
+    --------------------------------------------------------- */
 
     if(!currentProfile){
 
@@ -1564,8 +1608,8 @@ async function initializeApplication(){
             await supabaseClient
                 .from("tuition_students")
                 .select("*")
-                .eq("user_id",user.id)
-                .eq("active",true)
+                .eq("user_id", user.id)
+                .eq("active", true)
                 .maybeSingle();
 
         if(studentResult.error){
@@ -1584,6 +1628,11 @@ async function initializeApplication(){
 
         }
 
+
+        /*
+           Student gets ONLY the student application.
+        */
+
         setupStudentApplication();
 
         return;
@@ -1594,29 +1643,85 @@ async function initializeApplication(){
        TUTOR / ADMIN
     --------------------------------------------------------- */
 
-    const studentsResult =
-        await supabaseClient
-            .from("tuition_students")
-            .select("*")
-            .eq("active",true)
-            .order(
-                "created_at",
-                {ascending:false}
-            )
-            .limit(1);
+    if(
+        currentProfile.role === "tutor" ||
+        currentProfile.role === "admin"
+    ){
 
-    if(studentsResult.error){
-        throw studentsResult.error;
+        const studentsResult =
+            await supabaseClient
+                .from("tuition_students")
+                .select("*")
+                .eq("active", true)
+                .order(
+                    "full_name",
+                    {
+                        ascending:true
+                    }
+                );
+
+        if(studentsResult.error){
+            throw studentsResult.error;
+        }
+
+
+        const students =
+            studentsResult.data || [];
+
+
+        /*
+           Select first learner by default.
+        */
+
+        if(students.length){
+
+            currentStudent =
+                students[0];
+
+        }else{
+
+            currentStudent =
+                null;
+
+        }
+
+
+        /*
+           Build tutor application.
+        */
+
+        setupTutorApplication();
+
+
+        /*
+           Populate learner selector AFTER
+           tutor dashboard exists.
+        */
+
+        populateTutorStudentSelector(
+            students
+        );
+
+
+        /*
+           Load dashboard for the selected learner.
+        */
+
+        await loadTutorDashboard();
+
+        return;
     }
 
-    currentStudent =
-        studentsResult.data?.[0] || null;
 
+    /* ---------------------------------------------------------
+       UNKNOWN ROLE
+    --------------------------------------------------------- */
 
-    setupTutorApplication();
+    throw new Error(
+        `Unsupported tuition profile role: ${currentProfile.role}`
+    );
 
 }
-
 
 /* ============================================================
    STUDENT APPLICATION
@@ -1670,11 +1775,95 @@ function setupTutorApplication(){
         "Tutor Dashboard"
     );
 
-    loadTutorDashboard();
+}
+
+
+
+
+async function populateTutorStudentSelector(students){
+
+    const selector =
+        document.getElementById(
+            "tutorStudentSelector"
+        );
+
+    if(!selector){
+        return;
+    }
+
+    selector.innerHTML = "";
+
+    if(!students.length){
+
+        selector.innerHTML = `
+            <option value="">
+                No active learners
+            </option>
+        `;
+
+        return;
+    }
+
+    students.forEach(student => {
+
+        const option =
+            document.createElement("option");
+
+        option.value =
+            student.id;
+
+        option.textContent =
+            `${student.full_name} ${
+                student.grade_level
+                    ? `(Grade ${student.grade_level})`
+                    : ""
+            }`;
+
+        if(
+            currentStudent &&
+            student.id === currentStudent.id
+        ){
+
+            option.selected = true;
+
+        }
+
+        selector.appendChild(option);
+
+    });
+
+
+    selector.addEventListener(
+        "change",
+        async () => {
+
+            const studentId =
+                selector.value;
+
+            const selected =
+                students.find(
+                    student =>
+                        student.id === studentId
+                );
+
+            if(!selected){
+                return;
+            }
+
+            currentStudent =
+                selected;
+
+            await loadTutorDashboard();
+
+        }
+    );
 
 }
 
 
+
+
+    
 /* ============================================================
    STUDENT NAVIGATION
 ============================================================ */
