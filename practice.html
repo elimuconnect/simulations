@@ -1,0 +1,2936 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>UMTYMP Practice | Timed Mathematics</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+:root{
+    --primary:#2563eb;
+    --primary-dark:#1d4ed8;
+    --success:#16a34a;
+    --danger:#dc2626;
+    --warning:#d97706;
+    --dark:#111827;
+    --text:#172033;
+    --muted:#718096;
+    --border:#e3e9f1;
+    --background:#f4f7fb;
+    --white:#fff;
+}
+
+body{
+    font-family:
+        Inter,
+        Segoe UI,
+        Arial,
+        sans-serif;
+    background:var(--background);
+    color:var(--text);
+    min-height:100vh;
+}
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+.hidden{
+    display:none!important;
+}
+
+button{
+    font:inherit;
+    cursor:pointer;
+}
+
+button:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+}
+
+.container{
+    width:min(1100px,calc(100% - 30px));
+    margin:auto;
+}
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+.topbar{
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:rgba(255,255,255,.96);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+}
+
+.topbar-inner{
+    min-height:72px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+}
+
+.brand{
+    font-weight:900;
+    font-size:19px;
+}
+
+.brand span{
+    color:var(--primary);
+}
+
+.session-meta{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.meta-box{
+    padding:7px 11px;
+    border-radius:10px;
+    background:#f5f7fa;
+    border:1px solid var(--border);
+    font-size:12px;
+}
+
+.timer{
+    min-width:92px;
+    text-align:center;
+    padding:10px 14px;
+    border-radius:11px;
+    background:#eff6ff;
+    color:#1d4ed8;
+    font-weight:900;
+    font-variant-numeric:tabular-nums;
+}
+
+.timer.warning{
+    background:#fff7ed;
+    color:#c2410c;
+}
+
+.timer.danger{
+    background:#fef2f2;
+    color:#b91c1c;
+}
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+main{
+    padding:28px 0 50px;
+}
+
+.loading{
+    min-height:70vh;
+    display:grid;
+    place-items:center;
+}
+
+.loading-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:30px;
+    text-align:center;
+}
+
+/* =========================================================
+   INTRO / ERROR
+========================================================= */
+
+.message-card{
+    margin-top:35px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:28px;
+    text-align:center;
+}
+
+.message-card h1{
+    font-size:23px;
+    margin-bottom:8px;
+}
+
+.message-card p{
+    color:var(--muted);
+    line-height:1.6;
+}
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+.progress-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:17px;
+    margin-bottom:18px;
+}
+
+.progress-top{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:center;
+    font-size:13px;
+}
+
+.progress-track{
+    height:9px;
+    margin-top:11px;
+    background:#e8edf4;
+    border-radius:999px;
+    overflow:hidden;
+}
+
+.progress-fill{
+    width:0;
+    height:100%;
+    background:var(--primary);
+    transition:width .2s ease;
+}
+
+/* =========================================================
+   QUESTION
+========================================================= */
+
+.question-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 260px;
+    gap:18px;
+}
+
+.question-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:28px;
+}
+
+.question-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    margin-bottom:22px;
+}
+
+.question-number{
+    font-size:13px;
+    font-weight:850;
+    color:#65748a;
+}
+
+.question-timer{
+    min-width:100px;
+    text-align:center;
+    border-radius:10px;
+    padding:9px 11px;
+    background:#f0fdf4;
+    color:#166534;
+    font-weight:900;
+    font-variant-numeric:tabular-nums;
+}
+
+.question-timer.warning{
+    background:#fff7ed;
+    color:#c2410c;
+}
+
+.question-timer.danger{
+    background:#fef2f2;
+    color:#b91c1c;
+}
+
+.question-text{
+    font-size:25px;
+    line-height:1.55;
+    font-weight:700;
+}
+
+.options{
+    display:grid;
+    gap:11px;
+    margin-top:25px;
+}
+
+.option{
+    position:relative;
+    border:2px solid #e1e7ef;
+    background:#fff;
+    border-radius:13px;
+    padding:15px 16px;
+    display:flex;
+    align-items:center;
+    gap:13px;
+    text-align:left;
+    transition:.15s;
+}
+
+.option:hover{
+    border-color:#aac3f5;
+    background:#f8fbff;
+}
+
+.option.selected{
+    border-color:var(--primary);
+    background:#eff6ff;
+}
+
+.option-letter{
+    width:34px;
+    height:34px;
+    flex:0 0 34px;
+    border-radius:10px;
+    background:#eef2f7;
+    display:grid;
+    place-items:center;
+    font-weight:900;
+    font-size:13px;
+}
+
+.option.selected .option-letter{
+    background:var(--primary);
+    color:#fff;
+}
+
+.option-text{
+    font-size:15px;
+    line-height:1.5;
+}
+
+.question-actions{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:25px;
+}
+
+.btn{
+    border:0;
+    border-radius:11px;
+    padding:11px 16px;
+    font-weight:800;
+}
+
+.btn-primary{
+    background:var(--primary);
+    color:#fff;
+}
+
+.btn-primary:hover{
+    background:var(--primary-dark);
+}
+
+.btn-light{
+    background:#edf2f7;
+    color:#26334a;
+}
+
+.btn-danger{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+/* =========================================================
+   SIDE PANEL
+========================================================= */
+
+.side-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:18px;
+    height:max-content;
+}
+
+.side-title{
+    font-weight:850;
+    margin-bottom:12px;
+}
+
+.question-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:7px;
+}
+
+.question-dot{
+    aspect-ratio:1;
+    border:0;
+    border-radius:9px;
+    background:#eef2f7;
+    color:#42516a;
+    font-size:12px;
+    font-weight:800;
+}
+
+.question-dot.current{
+    background:var(--primary);
+    color:#fff;
+}
+
+.question-dot.answered{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.question-dot.current.answered{
+    background:var(--primary);
+    color:#fff;
+}
+
+.question-dot.timeout{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.legend{
+    margin-top:15px;
+    display:grid;
+    gap:8px;
+    font-size:11px;
+    color:#738095;
+}
+
+.legend-item{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.legend-dot{
+    width:10px;
+    height:10px;
+    border-radius:3px;
+    background:#eef2f7;
+}
+
+.legend-dot.current{
+    background:var(--primary);
+}
+
+.legend-dot.answered{
+    background:#dcfce7;
+}
+
+.legend-dot.timeout{
+    background:#fee2e2;
+}
+
+/* =========================================================
+   RESULTS
+========================================================= */
+
+.results{
+    width:min(900px,100%);
+    margin:20px auto;
+}
+
+.result-header{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:28px;
+    text-align:center;
+}
+
+.result-header h1{
+    font-size:28px;
+}
+
+.result-header p{
+    color:var(--muted);
+    margin-top:7px;
+}
+
+.result-stats{
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:11px;
+}
+
+.result-stat{
+    background:#f8fafc;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+}
+
+.result-stat strong{
+    display:block;
+    font-size:23px;
+}
+
+.result-stat span{
+    font-size:11px;
+    color:var(--muted);
+}
+
+.result-notice{
+    margin-top:16px;
+    background:#eff6ff;
+    color:#1e40af;
+    border-radius:11px;
+    padding:12px;
+    font-size:12px;
+    line-height:1.5;
+}
+
+.review-card{
+    margin-top:18px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:22px;
+}
+
+.review-item{
+    border-bottom:1px solid #edf1f5;
+    padding:16px 0;
+}
+
+.review-item:last-child{
+    border-bottom:0;
+}
+
+.review-q{
+    font-weight:800;
+    line-height:1.5;
+}
+
+.review-answer{
+    margin-top:7px;
+    font-size:13px;
+    color:#59677b;
+}
+
+.correct{
+    color:#15803d;
+    font-weight:800;
+}
+
+.incorrect{
+    color:#b91c1c;
+    font-weight:800;
+}
+
+.review-explanation{
+    margin-top:9px;
+    background:#f8fafc;
+    padding:11px;
+    border-radius:9px;
+    font-size:12px;
+    color:#5f6d80;
+    line-height:1.5;
+}
+
+.review-button{
+    margin-top:18px;
+    width:100%;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media(max-width:850px){
+
+    .question-layout{
+        grid-template-columns:1fr;
+    }
+
+    .side-card{
+        order:-1;
+    }
+
+    .question-text{
+        font-size:21px;
+    }
+
+    .result-stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+}
+
+@media(max-width:550px){
+
+    .container{
+        width:min(100% - 18px,1100px);
+    }
+
+    main{
+        padding-top:16px;
+    }
+
+    .topbar-inner{
+        min-height:62px;
+    }
+
+    .brand{
+        font-size:16px;
+    }
+
+    .meta-box{
+        display:none;
+    }
+
+    .timer{
+        min-width:78px;
+        padding:8px 9px;
+    }
+
+    .question-card{
+        padding:19px;
+    }
+
+    .question-top{
+        margin-bottom:17px;
+    }
+
+    .question-text{
+        font-size:19px;
+    }
+
+    .question-actions{
+        flex-direction:column;
+    }
+
+    .question-actions .btn{
+        width:100%;
+    }
+
+    .result-stats{
+        grid-template-columns:1fr 1fr;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- =========================================================
+     TOPBAR
+========================================================= -->
+
+<header id="topbar" class="topbar hidden">
+
+```
+<div class="container topbar-inner">
+
+    <div class="brand">
+        UMTYMP <span>Tuition</span>
+    </div>
+
+    <div class="session-meta">
+
+        <div id="sessionTitle" class="meta-box">
+            Timed Practice
+        </div>
+
+        <div id="totalTimer" class="timer">
+            00:00
+        </div>
+
+    </div>
+
+</div>
+```
+
+</header>
+
+<!-- =========================================================
+     LOADING
+========================================================= -->
+
+<div id="loadingScreen" class="loading">
+
+```
+<div class="loading-card">
+    <strong>Preparing your mathematics practice...</strong>
+
+    <div
+        style="margin-top:8px;color:#718096;font-size:13px"
+    >
+        Connecting to your tuition session.
+    </div>
+</div>
+```
+
+</div>
+
+<!-- =========================================================
+     ERROR
+========================================================= -->
+
+<div id="errorScreen" class="container hidden">
+
+```
+<div class="message-card">
+
+    <h1>Unable to open practice</h1>
+
+    <p id="errorMessage">
+        An error occurred.
+    </p>
+
+    <button
+        class="btn btn-primary"
+        style="margin-top:18px"
+        onclick="window.location.href='index.html'"
+    >
+        Return to Dashboard
+    </button>
+
+</div>
+```
+
+</div>
+
+<!-- =========================================================
+     PRACTICE
+========================================================= -->
+
+<main id="practiceMain" class="container hidden">
+
+```
+<div class="progress-card">
+
+    <div class="progress-top">
+
+        <strong id="progressText">
+            Question 1 of 10
+        </strong>
+
+        <span id="answeredText">
+            0 answered
+        </span>
+
+    </div>
+
+    <div class="progress-track">
+
+        <div
+            id="progressFill"
+            class="progress-fill"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<div class="question-layout">
+
+    <!-- QUESTION -->
+
+    <section class="question-card">
+
+        <div class="question-top">
+
+            <div
+                id="questionNumber"
+                class="question-number"
+            >
+                QUESTION 1
+            </div>
+
+            <div
+                id="questionTimer"
+                class="question-timer"
+            >
+                30s
+            </div>
+
+        </div>
+
+
+        <div
+            id="questionText"
+            class="question-text"
+        ></div>
+
+
+        <div
+            id="options"
+            class="options"
+        ></div>
+
+
+        <div class="question-actions">
+
+            <button
+                id="skipBtn"
+                class="btn btn-light"
+            >
+                Skip
+            </button>
+
+            <button
+                id="submitBtn"
+                class="btn btn-primary"
+            >
+                Submit & Next
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- SIDE NAVIGATION -->
+
+    <aside class="side-card">
+
+        <div class="side-title">
+            Questions
+        </div>
+
+        <div
+            id="questionGrid"
+            class="question-grid"
+        ></div>
+
+
+        <div class="legend">
+
+            <div class="legend-item">
+                <span class="legend-dot current"></span>
+                Current
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-dot answered"></span>
+                Answered
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-dot timeout"></span>
+                Timed out
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-dot"></span>
+                Not attempted
+            </div>
+
+        </div>
+
+    </aside>
+
+</div>
+```
+
+</main>
+
+<!-- =========================================================
+     RESULTS
+========================================================= -->
+
+<div
+    id="resultsScreen"
+    class="results hidden"
+>
+
+```
+<div class="result-header">
+
+    <h1>Practice Complete</h1>
+
+    <p id="resultTitle">
+        UMTYMP Preparation Practice
+    </p>
+
+
+    <div class="result-stats">
+
+        <div class="result-stat">
+            <strong id="resultScore">0/0</strong>
+            <span>Correct</span>
+        </div>
+
+        <div class="result-stat">
+            <strong id="resultAccuracy">0%</strong>
+            <span>Accuracy</span>
+        </div>
+
+        <div class="result-stat">
+            <strong id="resultTime">0s</strong>
+            <span>Average Time</span>
+        </div>
+
+        <div class="result-stat">
+            <strong id="resultTimeout">0</strong>
+            <span>Timed Out</span>
+        </div>
+
+    </div>
+
+
+    <div class="result-notice">
+
+        This result is an internal
+        <strong>UMTYMP Preparation</strong>
+        practice metric. It is not an official UMTYMP
+        examination score and does not predict admission
+        or passing.
+
+    </div>
+
+
+    <button
+        id="backDashboardBtn"
+        class="btn btn-primary review-button"
+    >
+        Return to Dashboard
+    </button>
+
+</div>
+
+
+<div class="review-card">
+
+    <h2 style="font-size:18px">
+        Question Review
+    </h2>
+
+    <div
+        id="reviewList"
+        style="margin-top:5px"
+    ></div>
+
+</div>
+```
+
+</div>
+
+<script>
+
+/* ============================================================
+   SUPABASE CONFIG
+============================================================
+
+   Replace these with your own project values.
+
+   NEVER put the Supabase service_role key here.
+============================================================ */
+
+const SUPABASE_URL =
+    "YOUR_SUPABASE_PROJECT_URL";
+
+const SUPABASE_ANON_KEY =
+    "YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY";
+
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+/* ============================================================
+   STATE
+============================================================ */
+
+let currentUser = null;
+let currentStudent = null;
+
+let sessionId = null;
+let sessionData = null;
+
+let questions = [];
+let answers = [];
+
+let currentIndex = 0;
+
+let totalTimerInterval = null;
+let questionTimerInterval = null;
+
+let totalRemainingSeconds = 0;
+let questionRemainingSeconds = 0;
+
+let questionStartedAt = null;
+
+let submitting = false;
+let sessionFinished = false;
+
+
+/* ============================================================
+   DOM
+============================================================ */
+
+const loadingScreen =
+    document.getElementById("loadingScreen");
+
+const errorScreen =
+    document.getElementById("errorScreen");
+
+const practiceMain =
+    document.getElementById("practiceMain");
+
+const topbar =
+    document.getElementById("topbar");
+
+const resultsScreen =
+    document.getElementById("resultsScreen");
+
+
+/* ============================================================
+   HELPERS
+============================================================ */
+
+function escapeHtml(value){
+
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+
+function formatClock(secondsValue){
+
+    const seconds =
+        Math.max(
+            0,
+            Math.floor(Number(secondsValue) || 0)
+        );
+
+    const minutes =
+        Math.floor(seconds / 60);
+
+    const remainder =
+        seconds % 60;
+
+    return (
+        String(minutes).padStart(2,"0")
+        +
+        ":"
+        +
+        String(remainder).padStart(2,"0")
+    );
+
+}
+
+
+function formatQuestionSeconds(value){
+
+    const seconds =
+        Math.max(
+            0,
+            Math.ceil(Number(value) || 0)
+        );
+
+    return `${seconds}s`;
+
+}
+
+
+function formatDate(value){
+
+    if(!value){
+        return "";
+    }
+
+    return new Date(value).toLocaleDateString(
+        undefined,
+        {
+            year:"numeric",
+            month:"long",
+            day:"numeric"
+        }
+    );
+
+}
+
+
+function showError(message){
+
+    loadingScreen.classList.add("hidden");
+    practiceMain.classList.add("hidden");
+    topbar.classList.add("hidden");
+    resultsScreen.classList.add("hidden");
+
+    document.getElementById(
+        "errorMessage"
+    ).textContent =
+        message;
+
+    errorScreen.classList.remove("hidden");
+
+}
+
+
+/* ============================================================
+   INITIALIZATION
+============================================================ */
+
+(async function initialize(){
+
+    try{
+
+        const {
+            data:{
+                session
+            },
+            error
+        } =
+            await supabaseClient.auth.getSession();
+
+        if(error){
+            throw error;
+        }
+
+        if(!session){
+
+            showError(
+                "You must sign in before starting a practice session."
+            );
+
+            return;
+        }
+
+        currentUser =
+            session.user;
+
+
+        await loadCurrentStudent();
+
+
+        if(!currentStudent){
+
+            throw new Error(
+                "No student profile is linked to this account."
+            );
+
+        }
+
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+
+        const requestedSession =
+            params.get("session_id");
+
+
+        if(requestedSession){
+
+            sessionId =
+                requestedSession;
+
+        }else{
+
+            const mode =
+                params.get("mode") ||
+                "speed";
+
+            const count =
+                parseInt(
+                    params.get("count") || "10",
+                    10
+                );
+
+            let questionCount =
+                Number.isFinite(count)
+                    ? count
+                    : 10;
+
+
+            questionCount =
+                Math.min(
+                    100,
+                    Math.max(
+                        1,
+                        questionCount
+                    )
+                );
+
+
+            let timeLimit =
+                params.get("time");
+
+            timeLimit =
+                timeLimit
+                    ? parseInt(timeLimit,10)
+                    : null;
+
+
+            let title =
+                params.get("title");
+
+
+            if(!title){
+
+                if(mode === "speed"){
+
+                    title =
+                        "UMTYMP Speed Drill";
+
+                }else if(mode === "diagnostic"){
+
+                    title =
+                        "UMTYMP Diagnostic Practice";
+
+                }else{
+
+                    title =
+                        "UMTYMP Timed Practice";
+
+                }
+
+            }
+
+
+            sessionId =
+                await createSession(
+                    questionCount,
+                    timeLimit,
+                    title,
+                    mode
+                );
+
+        }
+
+
+        await openSession();
+
+    }catch(error){
+
+        console.error(error);
+
+        showError(
+            error.message ||
+            "Unable to initialize the practice session."
+        );
+
+    }
+
+})();
+
+
+/* ============================================================
+   LOAD STUDENT
+============================================================ */
+
+async function loadCurrentStudent(){
+
+    const result =
+        await supabaseClient
+            .from("tuition_students")
+            .select("*")
+            .eq("user_id",currentUser.id)
+            .eq("active",true)
+            .maybeSingle();
+
+
+    if(result.error){
+        throw result.error;
+    }
+
+
+    currentStudent =
+        result.data;
+
+}
+
+
+/* ============================================================
+   CREATE SESSION
+============================================================ */
+
+async function createSession(
+    questionCount,
+    timeLimit,
+    title,
+    mode
+){
+
+    const result =
+        await supabaseClient.rpc(
+            "tuition_create_timed_session",
+            {
+                p_student_id:
+                    currentStudent.id,
+
+                p_question_count:
+                    questionCount,
+
+                p_time_limit_seconds:
+                    timeLimit,
+
+                p_title:
+                    title,
+
+                p_mode:
+                    mode,
+
+                p_topic_id:
+                    null
+            }
+        );
+
+
+    if(result.error){
+        throw result.error;
+    }
+
+
+    if(!result.data){
+        throw new Error(
+            "Supabase did not return a practice session ID."
+        );
+    }
+
+
+    return result.data;
+
+}
+
+
+/* ============================================================
+   OPEN SESSION
+============================================================ */
+
+async function openSession(){
+
+    const result =
+        await supabaseClient.rpc(
+            "tuition_get_timed_session",
+            {
+                p_session_id:
+                    sessionId,
+
+                p_student_id:
+                    currentStudent.id
+            }
+        );
+
+
+    if(result.error){
+        throw result.error;
+    }
+
+
+    questions =
+        result.data || [];
+
+
+    if(!questions.length){
+
+        throw new Error(
+            "This practice session has no questions."
+        );
+
+    }
+
+
+    /*
+       Obtain session metadata directly from the table.
+       This is only metadata; answers are still handled by RPCs.
+    */
+
+    const sessionResult =
+        await supabaseClient
+            .from("tuition_practice_sessions")
+            .select("*")
+            .eq("id",sessionId)
+            .eq("student_id",currentStudent.id)
+            .maybeSingle();
+
+
+    if(sessionResult.error){
+        throw sessionResult.error;
+    }
+
+
+    sessionData =
+        sessionResult.data;
+
+
+    if(!sessionData){
+
+        throw new Error(
+            "Practice session could not be found."
+        );
+
+    }
+
+
+    if(
+        sessionData.status === "completed"
+    ){
+
+        throw new Error(
+            "This practice session has already been completed."
+        );
+
+    }
+
+
+    answers =
+        questions.map(() => ({
+            selectedAnswer:null,
+            submitted:false,
+            skipped:false,
+            timedOut:false,
+            timeSeconds:null
+        }));
+
+
+    document.getElementById(
+        "sessionTitle"
+    ).textContent =
+        sessionData.title ||
+        "UMTYMP Timed Practice";
+
+
+    totalRemainingSeconds =
+        Number(
+            sessionData.time_limit_seconds ||
+            questions.length * 30
+        );
+
+
+    buildQuestionGrid();
+
+
+    const startResult =
+        await supabaseClient.rpc(
+            "tuition_start_timed_session",
+            {
+                p_session_id:
+                    sessionId
+            }
+        );
+
+
+    if(startResult.error){
+
+        /*
+          A session could already have been started by a reload.
+          In that case the function returns false.
+          We can still safely continue if the session exists.
+        */
+
+        console.warn(
+            "Session start:",
+            startResult.error
+        );
+
+    }
+
+
+    loadingScreen.classList.add("hidden");
+    errorScreen.classList.add("hidden");
+    resultsScreen.classList.add("hidden");
+
+    topbar.classList.remove("hidden");
+    practiceMain.classList.remove("hidden");
+
+
+    startTotalTimer();
+
+    showQuestion(0);
+
+}
+
+
+/* ============================================================
+   QUESTION GRID
+============================================================ */
+
+function buildQuestionGrid(){
+
+    const grid =
+        document.getElementById(
+            "questionGrid"
+        );
+
+
+    grid.innerHTML =
+        questions.map(
+            (_question,index) => {
+
+                return `
+                    <button
+                        class="question-dot"
+                        data-index="${index}"
+                    >
+                        ${index + 1}
+                    </button>
+                `;
+
+            }
+        ).join("");
+
+
+    grid
+        .querySelectorAll(
+            ".question-dot"
+        )
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const index =
+                        Number(
+                            button.dataset.index
+                        );
+
+
+                    /*
+                       Do not allow navigation away from an
+                       unanswered question without recording it.
+                    */
+
+                    if(
+                        index !== currentIndex &&
+                        !answers[currentIndex].submitted
+                    ){
+
+                        if(
+                            !confirm(
+                                "This question has not been submitted. Leave it and record it as skipped?"
+                            )
+                        ){
+
+                            return;
+
+                        }
+
+                        submitCurrentQuestion(
+                            {
+                                skipped:true
+                            },
+                            index
+                        );
+
+                        return;
+
+                    }
+
+
+                    stopQuestionTimer();
+                    showQuestion(index);
+
+                }
+            );
+
+        });
+
+}
+
+
+/* ============================================================
+   SHOW QUESTION
+============================================================ */
+
+function showQuestion(index){
+
+    if(sessionFinished){
+        return;
+    }
+
+
+    if(
+        index < 0 ||
+        index >= questions.length
+    ){
+        return;
+    }
+
+
+    currentIndex =
+        index;
+
+
+    const question =
+        questions[currentIndex];
+
+    const state =
+        answers[currentIndex];
+
+
+    document.getElementById(
+        "questionNumber"
+    ).textContent =
+        `QUESTION ${currentIndex + 1}`;
+
+
+    document.getElementById(
+        "questionText"
+    ).innerHTML =
+        escapeHtml(
+            question.question_text
+        );
+
+
+    document.getElementById(
+        "progressText"
+    ).textContent =
+        `Question ${currentIndex + 1} of ${questions.length}`;
+
+
+    const answeredCount =
+        answers.filter(
+            item => item.submitted
+        ).length;
+
+
+    document.getElementById(
+        "answeredText"
+    ).textContent =
+        `${answeredCount} answered`;
+
+
+    const percentage =
+        (
+            ((currentIndex + 1) /
+            questions.length)
+            * 100
+        );
+
+
+    document.getElementById(
+        "progressFill"
+    ).style.width =
+        `${percentage}%`;
+
+
+    renderOptions(question,state);
+
+    updateQuestionGrid();
+
+    startQuestionTimer();
+
+}
+
+
+/* ============================================================
+   RENDER OPTIONS
+============================================================ */
+
+function renderOptions(
+    question,
+    state
+){
+
+    const optionsContainer =
+        document.getElementById(
+            "options"
+        );
+
+
+    const letters =
+        ["A","B","C","D"];
+
+
+    optionsContainer.innerHTML =
+        letters.map(letter => {
+
+            const value =
+                question[
+                    `option_${letter.toLowerCase()}`
+                ];
+
+
+            if(value === null || value === undefined){
+                return "";
+            }
+
+
+            const selected =
+                state.selectedAnswer === letter
+                    ? "selected"
+                    : "";
+
+
+            return `
+
+                <button
+                    type="button"
+                    class="option ${selected}"
+                    data-answer="${letter}"
+                    ${
+                        state.submitted
+                            ? "disabled"
+                            : ""
+                    }
+                >
+
+                    <span class="option-letter">
+                        ${letter}
+                    </span>
+
+                    <span class="option-text">
+                        ${escapeHtml(value)}
+                    </span>
+
+                </button>
+
+            `;
+
+        }).join("");
+
+
+    optionsContainer
+        .querySelectorAll(
+            ".option"
+        )
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    if(
+                        answers[
+                            currentIndex
+                        ].submitted
+                    ){
+                        return;
+                    }
+
+
+                    answers[
+                        currentIndex
+                    ].selectedAnswer =
+                        button.dataset.answer;
+
+
+                    optionsContainer
+                        .querySelectorAll(
+                            ".option"
+                        )
+                        .forEach(
+                            option =>
+                                option.classList.remove(
+                                    "selected"
+                                )
+                        );
+
+
+                    button.classList.add(
+                        "selected"
+                    );
+
+                }
+            );
+
+        });
+
+}
+
+
+/* ============================================================
+   QUESTION TIMER
+============================================================ */
+
+function startQuestionTimer(){
+
+    stopQuestionTimer();
+
+
+    const question =
+        questions[currentIndex];
+
+
+    const state =
+        answers[currentIndex];
+
+
+    if(state.submitted){
+
+        document.getElementById(
+            "questionTimer"
+        ).textContent =
+            "Done";
+
+        return;
+
+    }
+
+
+    questionRemainingSeconds =
+        Number(
+            question.target_time_seconds ||
+            30
+        );
+
+
+    /*
+       The timer starts from the moment the learner enters
+       the question. The actual server record is still stored
+       through the timed-answer RPC.
+    */
+
+    questionStartedAt =
+        Date.now();
+
+
+    const timerElement =
+        document.getElementById(
+            "questionTimer"
+        );
+
+
+    updateQuestionTimerDisplay();
+
+
+    questionTimerInterval =
+        setInterval(
+            async () => {
+
+                questionRemainingSeconds--;
+
+                updateQuestionTimerDisplay();
+
+
+                if(
+                    questionRemainingSeconds <= 0
+                ){
+
+                    stopQuestionTimer();
+
+
+                    await submitCurrentQuestion(
+                        {
+                            timedOut:true
+                        },
+                        getNextUnansweredIndex()
+                    );
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+/* ============================================================
+   QUESTION TIMER DISPLAY
+============================================================ */
+
+function updateQuestionTimerDisplay(){
+
+    const timer =
+        document.getElementById(
+            "questionTimer"
+        );
+
+
+    timer.textContent =
+        formatQuestionSeconds(
+            questionRemainingSeconds
+        );
+
+
+    timer.classList.remove(
+        "warning",
+        "danger"
+    );
+
+
+    if(
+        questionRemainingSeconds <= 10 &&
+        questionRemainingSeconds > 5
+    ){
+
+        timer.classList.add(
+            "warning"
+        );
+
+    }
+
+
+    if(
+        questionRemainingSeconds <= 5
+    ){
+
+        timer.classList.add(
+            "danger"
+        );
+
+    }
+
+}
+
+
+function stopQuestionTimer(){
+
+    if(questionTimerInterval){
+
+        clearInterval(
+            questionTimerInterval
+        );
+
+        questionTimerInterval =
+            null;
+    }
+
+}
+
+
+/* ============================================================
+   TOTAL SESSION TIMER
+============================================================ */
+
+function startTotalTimer(){
+
+    stopTotalTimer();
+
+
+    updateTotalTimer();
+
+
+    totalTimerInterval =
+        setInterval(
+            async () => {
+
+                totalRemainingSeconds--;
+
+                updateTotalTimer();
+
+
+                if(
+                    totalRemainingSeconds <= 0
+                ){
+
+                    stopTotalTimer();
+
+                    await autoFinishSession();
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+function stopTotalTimer(){
+
+    if(totalTimerInterval){
+
+        clearInterval(
+            totalTimerInterval
+        );
+
+        totalTimerInterval =
+            null;
+    }
+
+}
+
+
+function updateTotalTimer(){
+
+    const timer =
+        document.getElementById(
+            "totalTimer"
+        );
+
+
+    timer.textContent =
+        formatClock(
+            totalRemainingSeconds
+        );
+
+
+    timer.classList.remove(
+        "warning",
+        "danger"
+    );
+
+
+    if(
+        totalRemainingSeconds <= 120 &&
+        totalRemainingSeconds > 30
+    ){
+
+        timer.classList.add(
+            "warning"
+        );
+
+    }
+
+
+    if(
+        totalRemainingSeconds <= 30
+    ){
+
+        timer.classList.add(
+            "danger"
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   SUBMIT BUTTON
+============================================================ */
+
+document
+    .getElementById(
+        "submitBtn"
+    )
+    .addEventListener(
+        "click",
+        async () => {
+
+            if(submitting){
+                return;
+            }
+
+
+            const state =
+                answers[currentIndex];
+
+
+            if(state.submitted){
+                return;
+            }
+
+
+            if(!state.selectedAnswer){
+
+                alert(
+                    "Select an answer first, or choose Skip."
+                );
+
+                return;
+
+            }
+
+
+            const next =
+                getNextUnansweredIndex();
+
+
+            await submitCurrentQuestion(
+                {
+                    selectedAnswer:
+                        state.selectedAnswer
+                },
+                next
+            );
+
+        }
+    );
+
+
+/* ============================================================
+   SKIP BUTTON
+============================================================ */
+
+document
+    .getElementById(
+        "skipBtn"
+    )
+    .addEventListener(
+        "click",
+        async () => {
+
+            if(submitting){
+                return;
+            }
+
+
+            const next =
+                getNextUnansweredIndex();
+
+
+            await submitCurrentQuestion(
+                {
+                    skipped:true
+                },
+                next
+            );
+
+        }
+    );
+
+
+/* ============================================================
+   GET NEXT UNANSWERED
+============================================================ */
+
+function getNextUnansweredIndex(){
+
+    for(
+        let i = currentIndex + 1;
+        i < answers.length;
+        i++
+    ){
+
+        if(!answers[i].submitted){
+            return i;
+        }
+
+    }
+
+
+    /*
+       Then search from the beginning.
+    */
+
+    for(
+        let i = 0;
+        i < currentIndex;
+        i++
+    ){
+
+        if(!answers[i].submitted){
+            return i;
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+/* ============================================================
+   SUBMIT CURRENT QUESTION
+============================================================ */
+
+async function submitCurrentQuestion(
+    options = {},
+    nextIndex = null
+){
+
+    if(submitting){
+        return;
+    }
+
+
+    const state =
+        answers[currentIndex];
+
+
+    if(state.submitted){
+        return;
+    }
+
+
+    submitting = true;
+
+    stopQuestionTimer();
+
+
+    const elapsedSeconds =
+        Math.max(
+            0,
+            (Date.now() - questionStartedAt) / 1000
+        );
+
+
+    const timeSeconds =
+        options.timedOut
+            ? Math.max(
+                Number(
+                    questions[currentIndex]
+                        .target_time_seconds ||
+                    30
+                ),
+                elapsedSeconds
+              )
+            : elapsedSeconds;
+
+
+    state.selectedAnswer =
+        options.selectedAnswer ??
+        state.selectedAnswer ??
+        null;
+
+
+    state.skipped =
+        Boolean(
+            options.skipped
+        );
+
+
+    state.timedOut =
+        Boolean(
+            options.timedOut
+        );
+
+
+    state.timeSeconds =
+        timeSeconds;
+
+
+    try{
+
+        const result =
+            await supabaseClient.rpc(
+                "tuition_submit_timed_answer",
+                {
+                    p_session_question_id:
+                        questions[
+                            currentIndex
+                        ].session_question_id,
+
+                    p_student_id:
+                        currentStudent.id,
+
+                    p_selected_answer:
+                        state.selectedAnswer,
+
+                    p_time_seconds:
+                        Number(
+                            timeSeconds.toFixed(2)
+                        ),
+
+                    p_timed_out:
+                        state.timedOut,
+
+                    p_skipped:
+                        state.skipped,
+
+                    p_confidence:
+                        null,
+
+                    p_mistake_type:
+                        null
+                }
+            );
+
+
+        if(result.error){
+            throw result.error;
+        }
+
+
+        state.submitted =
+            true;
+
+
+        updateQuestionGrid();
+
+        updateProgress();
+
+
+        if(nextIndex === null){
+
+            await finishSession();
+
+        }else{
+
+            showQuestion(
+                nextIndex
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Your answer could not be saved.\n\n" +
+            error.message
+        );
+
+    }finally{
+
+        submitting = false;
+
+    }
+
+}
+
+
+/* ============================================================
+   AUTO FINISH
+============================================================ */
+
+async function autoFinishSession(){
+
+    if(sessionFinished){
+        return;
+    }
+
+
+    /*
+       Any unanswered questions are recorded as timed out.
+    */
+
+    for(
+        let index = 0;
+        index < answers.length;
+        index++
+    ){
+
+        if(
+            !answers[index].submitted
+        ){
+
+            currentIndex =
+                index;
+
+            questionStartedAt =
+                Date.now();
+
+
+            try{
+
+                const result =
+                    await supabaseClient.rpc(
+                        "tuition_submit_timed_answer",
+                        {
+                            p_session_question_id:
+                                questions[index]
+                                    .session_question_id,
+
+                            p_student_id:
+                                currentStudent.id,
+
+                            p_selected_answer:
+                                null,
+
+                            p_time_seconds:
+                                Number(
+                                    questions[index]
+                                        .target_time_seconds ||
+                                    30
+                                ),
+
+                            p_timed_out:
+                                true,
+
+                            p_skipped:
+                                false,
+
+                            p_confidence:
+                                null,
+
+                            p_mistake_type:
+                                null
+                        }
+                    );
+
+
+                if(result.error){
+                    console.error(result.error);
+                }
+
+
+                answers[index].submitted =
+                    true;
+
+                answers[index].timedOut =
+                    true;
+
+                answers[index].timeSeconds =
+                    Number(
+                        questions[index]
+                            .target_time_seconds ||
+                        30
+                    );
+
+            }catch(error){
+
+                console.error(
+                    "Timed-out submission:",
+                    error
+                );
+
+            }
+
+        }
+
+    }
+
+
+    await finishSession();
+
+}
+
+
+/* ============================================================
+   FINISH SESSION
+============================================================ */
+
+async function finishSession(){
+
+    if(sessionFinished){
+        return;
+    }
+
+
+    sessionFinished = true;
+
+    stopQuestionTimer();
+    stopTotalTimer();
+
+
+    const result =
+        await supabaseClient.rpc(
+            "tuition_complete_timed_session",
+            {
+                p_session_id:
+                    sessionId,
+
+                p_student_id:
+                    currentStudent.id
+            }
+        );
+
+
+    if(result.error){
+
+        console.error(
+            "Complete session:",
+            result.error
+        );
+
+
+        showError(
+            "The session was completed locally, but the final result could not be saved: " +
+            result.error.message
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Update preparation statistics.
+    */
+
+    const preparationResult =
+        await supabaseClient.rpc(
+            "tuition_update_preparation_from_session",
+            {
+                p_session_id:
+                    sessionId,
+
+                p_student_id:
+                    currentStudent.id
+            }
+        );
+
+
+    if(preparationResult.error){
+
+        console.warn(
+            "Preparation update:",
+            preparationResult.error
+        );
+
+    }
+
+
+    /*
+       Record the progress snapshot.
+    */
+
+    const historyResult =
+        await supabaseClient.rpc(
+            "tuition_record_session_progress",
+            {
+                p_session_id:
+                    sessionId,
+
+                p_student_id:
+                    currentStudent.id
+            }
+        );
+
+
+    if(historyResult.error){
+
+        console.warn(
+            "Progress history:",
+            historyResult.error
+        );
+
+    }
+
+
+    await showResults(
+        result.data || {}
+    );
+
+}
+
+
+/* ============================================================
+   PROGRESS
+============================================================ */
+
+function updateProgress(){
+
+    const answeredCount =
+        answers.filter(
+            item => item.submitted
+        ).length;
+
+
+    document.getElementById(
+        "answeredText"
+    ).textContent =
+        `${answeredCount} answered`;
+
+
+    document.getElementById(
+        "progressFill"
+    ).style.width =
+        `${(
+            answeredCount /
+            questions.length
+        ) * 100}%`;
+
+}
+
+
+/* ============================================================
+   QUESTION GRID STATE
+============================================================ */
+
+function updateQuestionGrid(){
+
+    document
+        .querySelectorAll(
+            ".question-dot"
+        )
+        .forEach(
+            (button,index) => {
+
+                const state =
+                    answers[index];
+
+
+                button.classList.remove(
+                    "current",
+                    "answered",
+                    "timeout"
+                );
+
+
+                if(
+                    state.submitted
+                ){
+
+                    button.classList.add(
+                        "answered"
+                    );
+
+                }
+
+
+                if(
+                    state.timedOut
+                ){
+
+                    button.classList.remove(
+                        "answered"
+                    );
+
+                    button.classList.add(
+                        "timeout"
+                    );
+
+                }
+
+
+                if(
+                    index === currentIndex
+                ){
+
+                    button.classList.add(
+                        "current"
+                    );
+
+                }
+
+            }
+        );
+
+}
+
+
+/* ============================================================
+   RESULTS
+============================================================ */
+
+async function showResults(
+    sessionResult
+){
+
+    practiceMain.classList.add(
+        "hidden"
+    );
+
+    topbar.classList.add(
+        "hidden"
+    );
+
+    resultsScreen.classList.remove(
+        "hidden"
+    );
+
+
+    const total =
+        Number(
+            sessionResult.total_questions ||
+            questions.length
+        );
+
+
+    const correct =
+        Number(
+            sessionResult.correct_questions ||
+            0
+        );
+
+
+    const accuracy =
+        Number(
+            sessionResult.accuracy_percentage ||
+            0
+        );
+
+
+    const averageTime =
+        Number(
+            sessionResult.average_time_seconds ||
+            0
+        );
+
+
+    const timedOut =
+        Number(
+            sessionResult.timed_out_questions ||
+            0
+        );
+
+
+    document.getElementById(
+        "resultTitle"
+    ).textContent =
+        sessionData?.title ||
+        "UMTYMP Preparation Practice";
+
+
+    document.getElementById(
+        "resultScore"
+    ).textContent =
+        `${correct}/${total}`;
+
+
+    document.getElementById(
+        "resultAccuracy"
+    ).textContent =
+        `${accuracy.toFixed(0)}%`;
+
+
+    document.getElementById(
+        "resultTime"
+    ).textContent =
+        `${averageTime.toFixed(1)}s`;
+
+
+    document.getElementById(
+        "resultTimeout"
+    ).textContent =
+        timedOut;
+
+
+    await loadReview();
+
+}
+
+
+/* ============================================================
+   REVIEW
+============================================================ */
+
+async function loadReview(){
+
+    const result =
+        await supabaseClient.rpc(
+            "tuition_get_timed_session_review",
+            {
+                p_session_id:
+                    sessionId,
+
+                p_student_id:
+                    currentStudent.id
+            }
+        );
+
+
+    if(result.error){
+
+        document.getElementById(
+            "reviewList"
+        ).innerHTML = `
+
+            <div
+                style="
+                    margin-top:15px;
+                    color:#b91c1c;
+                    font-size:13px;
+                "
+            >
+                Unable to load review:
+                ${escapeHtml(
+                    result.error.message
+                )}
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    const rows =
+        result.data || [];
+
+
+    if(!rows.length){
+
+        document.getElementById(
+            "reviewList"
+        ).innerHTML = `
+
+            <div
+                style="
+                    margin-top:15px;
+                    color:#718096;
+                    font-size:13px;
+                "
+            >
+                No review data available.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "reviewList"
+    ).innerHTML =
+
+        rows.map(
+            row => {
+
+                const answerText =
+                    row.skipped
+                        ? "Skipped"
+
+                        : row.timed_out
+                            ? "Timed out"
+
+                            : (
+                                row.selected_answer ||
+                                "No answer"
+                            );
+
+
+                const status =
+                    row.is_correct
+                        ? "Correct"
+                        : "Incorrect";
+
+
+                return `
+
+                    <div class="review-item">
+
+                        <div class="review-q">
+
+                            ${row.question_number}.
+                            ${escapeHtml(
+                                row.question_text
+                            )}
+
+                        </div>
+
+
+                        <div class="review-answer">
+
+                            Your answer:
+                            <strong>
+                                ${escapeHtml(
+                                    answerText
+                                )}
+                            </strong>
+
+                            &nbsp; | &nbsp;
+
+                            Correct answer:
+                            <strong>
+                                ${escapeHtml(
+                                    row.correct_answer ||
+                                    "—"
+                                )}
+                            </strong>
+
+                            &nbsp; | &nbsp;
+
+                            <span
+                                class="${
+                                    row.is_correct
+                                        ? "correct"
+                                        : "incorrect"
+                                }"
+                            >
+                                ${status}
+                            </span>
+
+                        </div>
+
+
+                        <div class="review-answer">
+
+                            Time:
+                            ${Number(
+                                row.time_seconds || 0
+                            ).toFixed(1)}s
+
+                            &nbsp; | &nbsp;
+
+                            Target:
+                            ${
+                                row.target_time_seconds ||
+                                30
+                            }s
+
+                        </div>
+
+
+                        ${
+                            row.explanation
+                                ? `
+                                    <div class="review-explanation">
+
+                                        <strong>
+                                            Explanation:
+                                        </strong>
+
+                                        ${escapeHtml(
+                                            row.explanation
+                                        )}
+
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+/* ============================================================
+   RETURN TO DASHBOARD
+============================================================ */
+
+document
+    .getElementById(
+        "backDashboardBtn"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            window.location.href =
+                "index.html";
+
+        }
+    );
+
+
+/* ============================================================
+   PROTECT PAGE FROM ACCIDENTAL EXIT
+============================================================ */
+
+window.addEventListener(
+    "beforeunload",
+    event => {
+
+        if(
+            !sessionFinished &&
+            sessionId &&
+            practiceMain &&
+            !practiceMain.classList.contains(
+                "hidden"
+            )
+        ){
+
+            event.preventDefault();
+            event.returnValue =
+                "";
+
+        }
+
+    }
+);
+
+
+/* ============================================================
+   CLEANUP
+============================================================ */
+
+window.addEventListener(
+    "pagehide",
+    () => {
+
+        stopQuestionTimer();
+        stopTotalTimer();
+
+    }
+);
+
+</script>
+
+</body>
+</html>
