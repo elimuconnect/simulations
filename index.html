@@ -2745,6 +2745,8 @@ async function loadTutorDashboard(){
    PRACTICE SESSION
 ============================================================ */
 
+
+
 async function startTimedPractice(
     questionCount,
     timeLimit,
@@ -2789,6 +2791,11 @@ async function startTimedPractice(
 
     if(result.error){
 
+        console.error(
+            "Create practice session:",
+            result.error
+        );
+
         alert(
             "Unable to create practice session:\n\n" +
             result.error.message
@@ -2798,23 +2805,31 @@ async function startTimedPractice(
     }
 
 
-    /*
-      The actual question interface will be built
-      as the next frontend stage.
+    const createdSessionId =
+        result.data;
 
-      For now we confirm the session has been created.
+
+    if(!createdSessionId){
+
+        alert(
+            "The practice session was created, but Supabase did not return a session ID."
+        );
+
+        return;
+    }
+
+
+    /*
+       Open the actual timed question interface.
     */
 
-    alert(
-        `Practice session created.\n\n` +
-        `Questions: ${questionCount}\n` +
-        `Time: ${Math.floor(timeLimit / 60)} minutes\n\n` +
-        `Session ID:\n${result.data}`
-    );
+    window.location.href =
+        `practice.html?session_id=${encodeURIComponent(
+            createdSessionId
+        )}`;
 
 }
-
-
+    
 /* ============================================================
    DIAGNOSTIC
 ============================================================ */
