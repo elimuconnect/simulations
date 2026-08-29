@@ -2819,6 +2819,7 @@ async function startTimedPractice(
    DIAGNOSTIC
 ============================================================ */
 
+
 async function createDiagnostic(){
 
     if(!currentStudent){
@@ -2831,7 +2832,7 @@ async function createDiagnostic(){
 
     const result =
         await supabaseClient.rpc(
-            "tuition_create_diagnostic_assignment",
+            "tuition_create_diagnostic_assignment_v2",
             {
                 p_student_id:
                     currentStudent.id,
@@ -2855,6 +2856,11 @@ async function createDiagnostic(){
             result.error.message
         );
 
+        console.error(
+            "Diagnostic error:",
+            result.error
+        );
+
         return null;
     }
 
@@ -2863,26 +2869,44 @@ async function createDiagnostic(){
 
 }
 
-
+    
 /* ============================================================
    HISTORY
 ============================================================ */
 
-async function loadHistory(){
+
+    async function loadHistory(){
 
     if(!currentStudent){
+
+        document.getElementById(
+            "historyContent"
+        ).innerHTML = `
+            <div class="empty">
+                No active learner is available.
+            </div>
+        `;
+
         return;
     }
 
 
     const result =
         await supabaseClient.rpc(
-            "tuition_get_session_history",
-            {}
+            "tuition_get_session_history_v2",
+            {
+                p_student_id:
+                    currentStudent.id
+            }
         );
 
 
     if(result.error){
+
+        console.error(
+            "Practice history:",
+            result.error
+        );
 
         document.getElementById(
             "historyContent"
@@ -2908,7 +2932,10 @@ async function loadHistory(){
             "historyContent"
         ).innerHTML = `
             <div class="empty">
-                No practice sessions yet.
+                No practice sessions yet for
+                ${escapeHtml(
+                    currentStudent.full_name
+                )}.
             </div>
         `;
 
@@ -2925,7 +2952,6 @@ async function loadHistory(){
             <table>
 
                 <thead>
-
                     <tr>
                         <th>Title</th>
                         <th>Type</th>
@@ -2934,7 +2960,6 @@ async function loadHistory(){
                         <th>Average Time</th>
                         <th>Status</th>
                     </tr>
-
                 </thead>
 
                 <tbody>
@@ -2973,7 +2998,7 @@ async function loadHistory(){
                                         row.percentage != null
                                             ? percent(
                                                 row.percentage
-                                              )
+                                            )
                                             : "—"
                                     }
                                 </td>
@@ -2985,10 +3010,11 @@ async function loadHistory(){
                                 </td>
 
                                 <td>
-                                    ${escapeHtml(
-                                        row.status ||
-                                        "—"
-                                    )}
+                                    ${
+                                        row.completed_at
+                                            ? "Completed"
+                                            : "Not completed"
+                                    }
                                 </td>
 
                             </tr>
@@ -3003,7 +3029,6 @@ async function loadHistory(){
         </div>
 
     `;
-
 }
 
 
