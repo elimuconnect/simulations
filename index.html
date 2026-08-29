@@ -2137,6 +2137,7 @@ function buildTutorNavigation(){
    STUDENT DASHBOARD
 ============================================================ */
 
+
 async function loadStudentDashboard(){
 
     if(!currentStudent){
@@ -2144,7 +2145,11 @@ async function loadStudentDashboard(){
     }
 
 
-    const result =
+    /* ---------------------------------------------------------
+       PREPARATION DASHBOARD
+    --------------------------------------------------------- */
+
+    const preparationResult =
         await supabaseClient.rpc(
             "tuition_get_preparation_dashboard",
             {
@@ -2154,22 +2159,23 @@ async function loadStudentDashboard(){
         );
 
 
-    if(result.error){
+    if(preparationResult.error){
 
         console.error(
-            "Student dashboard:",
-            result.error
+            "Preparation dashboard:",
+            preparationResult.error
         );
 
         return;
     }
 
 
-    const data =
-        result.data || {};
+    const dashboardData =
+        preparationResult.data || {};
 
     const preparation =
-        data.preparation || {};
+        dashboardData.preparation || {};
+
 
     const readiness =
         Number(
@@ -2221,7 +2227,13 @@ async function loadStudentDashboard(){
     document.getElementById(
         "studentProgressBar"
     ).style.width =
-        `${Math.min(100,Math.max(0,readiness))}%`;
+        `${Math.min(
+            100,
+            Math.max(
+                0,
+                readiness
+            )
+        )}%`;
 
 
     document.getElementById(
@@ -2234,9 +2246,13 @@ async function loadStudentDashboard(){
             : "Target exam date not set.";
 
 
+    /* ---------------------------------------------------------
+       PRACTICE SUMMARY — SQL 8 V2
+    --------------------------------------------------------- */
+
     const summaryResult =
         await supabaseClient.rpc(
-            "tuition_get_student_practice_summary",
+            "tuition_get_student_practice_summary_v2",
             {
                 p_student_id:
                     currentStudent.id
@@ -2246,22 +2262,41 @@ async function loadStudentDashboard(){
 
     if(!summaryResult.error){
 
+        const summary =
+            summaryResult.data || {};
+
         document.getElementById(
             "studentSessions"
         ).textContent =
-            summaryResult.data?.completed_sessions ||
-            0;
+            summary.completed_sessions || 0;
+
+    }else{
+
+        console.error(
+            "Practice summary:",
+            summaryResult.error
+        );
 
     }
 
 
+    /* ---------------------------------------------------------
+       RECOMMENDED LESSON — SQL 8 V2
+    --------------------------------------------------------- */
+
     const recommendationResult =
         await supabaseClient.rpc(
-            "tuition_get_recommended_next_lesson",
+            "tuition_get_recommended_next_lesson_v2",
             {
                 p_student_id:
                     currentStudent.id
             }
+        );
+
+
+    const recommendationBox =
+        document.getElementById(
+            "studentRecommendation"
         );
 
 
@@ -2270,18 +2305,13 @@ async function loadStudentDashboard(){
         const recommendation =
             recommendationResult.data;
 
-        const box =
-            document.getElementById(
-                "studentRecommendation"
-            );
-
 
         if(
             recommendation &&
             recommendation.topic_name
         ){
 
-            box.innerHTML = `
+            recommendationBox.innerHTML = `
 
                 <strong>
                     ${escapeHtml(
@@ -2293,6 +2323,28 @@ async function loadStudentDashboard(){
                     class="muted"
                     style="margin-top:7px"
                 >
+                    Accuracy:
+                    ${percent(
+                        recommendation.accuracy_percentage
+                    )}
+                </div>
+
+                <div
+                    class="muted"
+                    style="margin-top:6px"
+                >
+                    Average time:
+                    ${seconds(
+                        recommendation.average_time_seconds
+                    )}
+                </div>
+
+                <div
+                    style="
+                        margin-top:9px;
+                        font-weight:750;
+                    "
+                >
                     ${escapeHtml(
                         recommendation.recommendation ||
                         "Continue targeted practice."
@@ -2303,17 +2355,27 @@ async function loadStudentDashboard(){
 
         }else{
 
-            box.textContent =
+            recommendationBox.textContent =
                 recommendation?.recommendation ||
-                "Complete your first diagnostic to generate a targeted recommendation.";
+                "Complete your first diagnostic to generate a recommendation.";
 
         }
+
+    }else{
+
+        console.error(
+            "Recommendation:",
+            recommendationResult.error
+        );
+
+        recommendationBox.textContent =
+            "Complete your first diagnostic to generate a recommendation.";
 
     }
 
 }
 
-
+    
 /* ============================================================
    TUTOR DASHBOARD
 ============================================================ */
