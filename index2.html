@@ -3919,23 +3919,20 @@ async function createDiagnostic(){
         )}
     </td>
 
-    <td>
+   <td>
 
-        <button
-            class="btn btn-light"
-            onclick="
-                window.location.href =
-                'test-review.html?test_number=${
-                    encodeURIComponent(
-                        row.test_number
-                    )
-                }';
-            "
-        >
-            View Test
-        </button>
+    <button
+        class="btn btn-light"
+        onclick="
+            openTutorSavedTest(
+                ${Number(row.test_number)}
+            );
+        "
+    >
+        View Test
+    </button>
 
-    </td>
+</td>
 
 </tr>
 
@@ -3955,6 +3952,44 @@ async function createDiagnostic(){
 }
 
 
+
+
+/* ============================================================
+   OPEN SAVED TEST — TUTOR
+============================================================ */
+
+function openTutorSavedTest(testNumber){
+
+    if(!currentStudent){
+
+        alert(
+            "No learner is currently selected."
+        );
+
+        return;
+    }
+
+    if(!testNumber){
+
+        alert(
+            "Invalid test number."
+        );
+
+        return;
+    }
+
+    window.location.href =
+        `tutor-test-review.html?test_number=${
+            encodeURIComponent(testNumber)
+        }&student_id=${
+            encodeURIComponent(currentStudent.id)
+        }`;
+
+}
+
+
+
+    
 /* ============================================================
    STUDENT BUTTONS
 ============================================================ */
