@@ -3799,14 +3799,13 @@ async function createDiagnostic(){
 
 
     const result =
-        await supabaseClient.rpc(
-            "tuition_get_session_history_v2",
-            {
-                p_student_id:
-                    currentStudent.id
-            }
-        );
-
+    await supabaseClient.rpc(
+        "tuition_get_student_test_history_v2",
+        {
+            p_student_id:
+                currentStudent.id
+        }
+    );
 
     if(result.error){
 
@@ -3860,12 +3859,13 @@ async function createDiagnostic(){
 
                 <thead>
                     <tr>
-                        <th>Title</th>
-                        <th>Type</th>
-                        <th>Score</th>
-                        <th>Accuracy</th>
-                        <th>Average Time</th>
-                        <th>Status</th>
+                       <th>Test</th>
+<th>Title</th>
+<th>Type</th>
+<th>Score</th>
+<th>Accuracy</th>
+<th>Average Time</th>
+<th>Action</th>
                     </tr>
                 </thead>
 
@@ -3874,57 +3874,73 @@ async function createDiagnostic(){
                     ${
                         rows.map(row => `
 
-                            <tr>
 
-                                <td>
-                                    ${escapeHtml(
-                                        row.title ||
-                                        "Practice"
-                                    )}
-                                </td>
+<tr>
 
-                                <td>
-                                    ${escapeHtml(
-                                        row.session_type ||
-                                        "—"
-                                    )}
-                                </td>
+    <td>
+        <strong>
+            Test #${row.test_number}
+        </strong>
+    </td>
 
-                                <td>
-                                    ${
-                                        row.score ?? "—"
-                                    }
-                                    /
-                                    ${
-                                        row.total_questions ?? "—"
-                                    }
-                                </td>
+    <td>
+        ${escapeHtml(
+            row.title || "Practice"
+        )}
+    </td>
 
-                                <td>
-                                    ${
-                                        row.percentage != null
-                                            ? percent(
-                                                row.percentage
-                                            )
-                                            : "—"
-                                    }
-                                </td>
+    <td>
+        ${escapeHtml(
+            row.session_type || "—"
+        )}
+    </td>
 
-                                <td>
-                                    ${seconds(
-                                        row.average_time_seconds
-                                    )}
-                                </td>
+    <td>
+        ${
+            row.score ?? "—"
+        }
+        /
+        ${
+            row.total_questions ?? "—"
+        }
+    </td>
 
-                                <td>
-                                    ${
-                                        row.completed_at
-                                            ? "Completed"
-                                            : "Not completed"
-                                    }
-                                </td>
+    <td>
+        ${
+            row.percentage != null
+                ? percent(row.percentage)
+                : "—"
+        }
+    </td>
 
-                            </tr>
+    <td>
+        ${seconds(
+            row.average_time_seconds
+        )}
+    </td>
+
+    <td>
+
+        <button
+            class="btn btn-light"
+            onclick="
+                window.location.href =
+                'test-review.html?test_number=${
+                    encodeURIComponent(
+                        row.test_number
+                    )
+                }';
+            "
+        >
+            View Test
+        </button>
+
+    </td>
+
+</tr>
+
+
+                            
 
                         `).join("")
                     }
