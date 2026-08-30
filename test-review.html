@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>UMTYMP Test Review</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f5f7fb;
+    color:#1f2937;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+    padding:30px 20px;
+}
+
+.card{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:22px;
+    margin-bottom:18px;
+}
+
+.hidden{
+    display:none;
+}
+
+.header{
+    margin-bottom:20px;
+}
+
+.test-number{
+    font-size:14px;
+    font-weight:800;
+}
+
+.title{
+    font-size:28px;
+    font-weight:900;
+    margin-top:5px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:
+        repeat(4,minmax(0,1fr));
+    gap:12px;
+}
+
+.stat{
+    background:#f8fafc;
+    border-radius:10px;
+    padding:15px;
+}
+
+.stat strong{
+    display:block;
+    font-size:22px;
+}
+
+.stat span{
+    display:block;
+    margin-top:5px;
+    color:#6b7280;
+    font-size:12px;
+}
+
+.review-item{
+    border-top:1px solid #e5e7eb;
+    padding:20px 0;
+}
+
+.review-item:first-child{
+    border-top:0;
+}
+
+.question-number{
+    font-weight:900;
+    margin-bottom:8px;
+}
+
+.question-text{
+    font-size:17px;
+    font-weight:700;
+    line-height:1.5;
+}
+
+.answer-line{
+    margin-top:10px;
+    font-size:14px;
+}
+
+.correct{
+    color:#15803d;
+    font-weight:800;
+}
+
+.incorrect{
+    color:#b91c1c;
+    font-weight:800;
+}
+
+.explanation{
+    margin-top:12px;
+    padding:12px;
+    background:#f8fafc;
+    border-radius:8px;
+    line-height:1.5;
+    font-size:14px;
+}
+
+button{
+    cursor:pointer;
+}
+
+.btn{
+    border:0;
+    border-radius:9px;
+    padding:11px 15px;
+    font-weight:800;
+}
+
+.btn-primary{
+    background:#2563eb;
+    color:#fff;
+}
+
+@media(max-width:700px){
+
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <div id="loading">
+        Loading saved test...
+    </div>
+
+
+    <div
+        id="error"
+        class="card hidden"
+    ></div>
+
+
+    <div
+        id="content"
+        class="hidden"
+    >
+
+        <div class="card">
+
+            <div class="test-number"
+                 id="testNumber">
+            </div>
+
+            <div class="title"
+                 id="testTitle">
+            </div>
+
+            <div
+                class="stats"
+                style="margin-top:18px"
+            >
+
+                <div class="stat">
+                    <strong id="score">
+                        —
+                    </strong>
+                    <span>Correct</span>
+                </div>
+
+                <div class="stat">
+                    <strong id="accuracy">
+                        —
+                    </strong>
+                    <span>Accuracy</span>
+                </div>
+
+                <div class="stat">
+                    <strong id="averageTime">
+                        —
+                    </strong>
+                    <span>Average Time</span>
+                </div>
+
+                <div class="stat">
+                    <strong id="completedDate">
+                        —
+                    </strong>
+                    <span>Completed</span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h2>
+                Question Review
+            </h2>
+
+            <div id="questionList">
+            </div>
+
+        </div>
+
+
+        <button
+            class="btn btn-primary"
+            onclick="
+                window.location.href='index.html'
+            "
+        >
+            Return to Dashboard
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ============================================================
+   SUPABASE
+============================================================ */
+
+const SUPABASE_URL =
+    "https://hhtplinfcdwgahlhurhx.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "sb_publishable_cOXipkG4wSKIkIHwkP04JA_KunvG7T5";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+/* ============================================================
+   HELPERS
+============================================================ */
+
+function escapeHtml(value){
+
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+}
+
+
+function formatDate(value){
+
+    if(!value){
+        return "—";
+    }
+
+    return new Date(value)
+        .toLocaleDateString(
+            undefined,
+            {
+                year:"numeric",
+                month:"long",
+                day:"numeric"
+            }
+        );
+
+}
+
+
+/* ============================================================
+   INITIALIZE
+============================================================ */
+
+(async function(){
+
+    try{
+
+        const {
+            data:{
+                session
+            },
+            error
+        } =
+            await supabaseClient.auth.getSession();
+
+
+        if(error){
+            throw error;
+        }
+
+
+        if(!session){
+
+            throw new Error(
+                "Please sign in first."
+            );
+
+        }
+
+
+        const currentUser =
+            session.user;
+
+
+        /* ----------------------------------------------------
+           LOAD STUDENT
+        ---------------------------------------------------- */
+
+        const studentResult =
+            await supabaseClient
+                .from("tuition_students")
+                .select("*")
+                .eq(
+                    "user_id",
+                    currentUser.id
+                )
+                .eq(
+                    "active",
+                    true
+                )
+                .maybeSingle();
+
+
+        if(studentResult.error){
+            throw studentResult.error;
+        }
+
+
+        const student =
+            studentResult.data;
+
+
+        if(!student){
+
+            throw new Error(
+                "No active student record is linked to this account."
+            );
+
+        }
+
+
+        /* ----------------------------------------------------
+           GET TEST NUMBER
+        ---------------------------------------------------- */
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+
+        const testNumber =
+            Number(
+                params.get("test_number")
+            );
+
+
+        if(!testNumber){
+
+            throw new Error(
+                "No Test Number was provided."
+            );
+
+        }
+
+
+        /* ----------------------------------------------------
+           GET TEST
+        ---------------------------------------------------- */
+
+        const testResult =
+            await supabaseClient.rpc(
+                "tuition_get_saved_test_v2",
+                {
+                    p_test_number:
+                        testNumber,
+
+                    p_student_id:
+                        student.id
+                }
+            );
+
+
+        if(testResult.error){
+            throw testResult.error;
+        }
+
+
+        const tests =
+            testResult.data || [];
+
+
+        if(!tests.length){
+
+            throw new Error(
+                "Saved test not found."
+            );
+
+        }
+
+
+        const test =
+            tests[0];
+
+
+        /* ----------------------------------------------------
+           GET QUESTIONS
+        ---------------------------------------------------- */
+
+        const questionResult =
+            await supabaseClient.rpc(
+                "tuition_get_saved_test_questions_v2",
+                {
+                    p_test_number:
+                        testNumber,
+
+                    p_student_id:
+                        student.id
+                }
+            );
+
+
+        if(questionResult.error){
+            throw questionResult.error;
+        }
+
+
+        const questions =
+            questionResult.data || [];
+
+
+        /* ----------------------------------------------------
+           DISPLAY TEST
+        ---------------------------------------------------- */
+
+        document.getElementById(
+            "testNumber"
+        ).textContent =
+            `Test #${test.test_number}`;
+
+
+        document.getElementById(
+            "testTitle"
+        ).textContent =
+            test.title ||
+            "UMTYMP Preparation Practice";
+
+
+        document.getElementById(
+            "score"
+        ).textContent =
+            `${test.score ?? 0}/${test.total_questions ?? questions.length}`;
+
+
+        document.getElementById(
+            "accuracy"
+        ).textContent =
+            test.percentage != null
+                ? `${Number(
+                    test.percentage
+                  ).toFixed(0)}%`
+                : "—";
+
+
+        document.getElementById(
+            "averageTime"
+        ).textContent =
+            test.average_time_seconds != null
+                ? `${Number(
+                    test.average_time_seconds
+                  ).toFixed(1)}s`
+                : "—";
+
+
+        document.getElementById(
+            "completedDate"
+        ).textContent =
+            formatDate(
+                test.completed_at
+            );
+
+
+        const list =
+            document.getElementById(
+                "questionList"
+            );
+
+
+        if(!questions.length){
+
+            list.innerHTML = `
+                <p>
+                    No saved question data is available
+                    for this test.
+                </p>
+            `;
+
+        }else{
+
+            list.innerHTML =
+                questions.map(
+                    q => {
+
+                        const answer =
+                            q.skipped
+                                ? "Skipped"
+                                : q.timed_out
+                                    ? "Timed out"
+                                    : (
+                                        q.selected_answer ||
+                                        "No answer"
+                                    );
+
+
+                        const statusClass =
+                            q.is_correct
+                                ? "correct"
+                                : "incorrect";
+
+
+                        const statusText =
+                            q.is_correct
+                                ? "Correct"
+                                : "Incorrect";
+
+
+                        return `
+
+                            <div class="review-item">
+
+                                <div class="question-number">
+                                    Question ${q.question_number}
+                                </div>
+
+                                <div class="question-text">
+                                    ${escapeHtml(
+                                        q.question_text
+                                    )}
+                                </div>
+
+                                <div
+                                    class="answer-line"
+                                >
+                                    Your answer:
+                                    <strong>
+                                        ${escapeHtml(
+                                            answer
+                                        )}
+                                    </strong>
+
+                                    &nbsp; | &nbsp;
+
+                                    Correct answer:
+                                    <strong>
+                                        ${escapeHtml(
+                                            q.correct_answer ||
+                                            "—"
+                                        )}
+                                    </strong>
+
+                                    &nbsp; | &nbsp;
+
+                                    <span
+                                        class="${statusClass}"
+                                    >
+                                        ${statusText}
+                                    </span>
+                                </div>
+
+                                <div
+                                    class="answer-line"
+                                >
+                                    Topic:
+                                    ${escapeHtml(
+                                        q.topic_name ||
+                                        "—"
+                                    )}
+
+                                    &nbsp; | &nbsp;
+
+                                    Time:
+                                    ${Number(
+                                        q.time_seconds || 0
+                                    ).toFixed(1)}s
+
+                                    &nbsp; | &nbsp;
+
+                                    Target:
+                                    ${
+                                        q.target_time_seconds ||
+                                        30
+                                    }s
+                                </div>
+
+                                ${
+                                    q.explanation
+                                        ? `
+                                            <div class="explanation">
+                                                <strong>
+                                                    Explanation:
+                                                </strong>
+                                                ${escapeHtml(
+                                                    q.explanation
+                                                )}
+                                            </div>
+                                          `
+                                        : ""
+                                }
+
+                            </div>
+
+                        `;
+
+                    }
+                ).join("");
+
+        }
+
+
+        document.getElementById(
+            "loading"
+        ).classList.add(
+            "hidden"
+        );
+
+
+        document.getElementById(
+            "content"
+        ).classList.remove(
+            "hidden"
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Test review:",
+            error
+        );
+
+
+        document.getElementById(
+            "loading"
+        ).classList.add(
+            "hidden"
+        );
+
+
+        const errorBox =
+            document.getElementById(
+                "error"
+            );
+
+
+        errorBox.textContent =
+            error.message ||
+            "Unable to load saved test.";
+
+
+        errorBox.classList.remove(
+            "hidden"
+        );
+
+    }
+
+})();
+
+</script>
+
+</body>
+</html>
