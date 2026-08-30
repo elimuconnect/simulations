@@ -237,15 +237,18 @@ body{
         class="card hidden"
     >
 
-        <div class="error"
-             id="errorMessage">
+        <div
+            class="error"
+            id="errorMessage"
+        >
         </div>
+
 
         <button
             class="button secondary"
             style="margin-top:15px"
             onclick="
-                window.location.href='index.html'
+                window.location.href='index2.html'
             "
         >
             Return to Dashboard
@@ -266,32 +269,44 @@ body{
 
         <div class="header">
 
+
+            <!-- =================================================
+                 RETURN TO TUTOR DASHBOARD
+            ================================================== -->
+
             <button
                 class="button secondary back-button"
                 onclick="
-                    window.location.href='index.html'
+                    window.location.href='index2.html'
                 "
             >
-                ← Back to Dashboard
+                ← Return to Dashboard
             </button>
 
+
+            <!-- =================================================
+                 TEST INFORMATION
+            ================================================== -->
 
             <div
                 id="testNumber"
                 class="test-number"
-            ></div>
+            >
+            </div>
 
 
             <div
                 id="testTitle"
                 class="title"
-            ></div>
+            >
+            </div>
 
 
             <div
                 id="learnerInfo"
                 class="learner"
-            ></div>
+            >
+            </div>
 
         </div>
 
@@ -303,6 +318,7 @@ body{
         <div class="card">
 
             <div class="stats">
+
 
                 <div class="stat">
 
@@ -368,6 +384,7 @@ body{
 
                 </div>
 
+
             </div>
 
         </div>
@@ -386,7 +403,31 @@ body{
 
             <div
                 id="questionList"
-            ></div>
+            >
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             BOTTOM RETURN BUTTON
+        ================================================== -->
+
+        <div
+            style="
+                margin-top:18px;
+                text-align:left;
+            "
+        >
+
+            <button
+                class="button primary"
+                onclick="
+                    window.location.href='index2.html'
+                "
+            >
+                ← Return to Dashboard
+            </button>
 
         </div>
 
@@ -454,8 +495,13 @@ function formatDate(value){
 
 function formatTime(value){
 
-    if(value === null || value === undefined){
+    if(
+        value === null ||
+        value === undefined
+    ){
+
         return "0.0s";
+
     }
 
     return `${Number(value).toFixed(1)}s`;
@@ -491,8 +537,9 @@ async function loadTutorTestReview(){
 
     try{
 
+
         /* -----------------------------------------------------
-           Validate URL
+           VALIDATE URL
         ----------------------------------------------------- */
 
         if(!testNumber){
@@ -514,7 +561,7 @@ async function loadTutorTestReview(){
 
 
         /* -----------------------------------------------------
-           Check authentication
+           CHECK AUTHENTICATION
         ----------------------------------------------------- */
 
         const {
@@ -523,7 +570,9 @@ async function loadTutorTestReview(){
             },
             error:sessionError
         } =
-            await supabaseClient.auth.getSession();
+            await supabaseClient
+                .auth
+                .getSession();
 
 
         if(sessionError){
@@ -580,7 +629,7 @@ async function loadTutorTestReview(){
 
 
         /* -----------------------------------------------------
-           LOAD QUESTIONS
+           LOAD SAVED QUESTIONS
         ----------------------------------------------------- */
 
         const questionResult =
@@ -606,7 +655,7 @@ async function loadTutorTestReview(){
 
 
         /* -----------------------------------------------------
-           SUMMARY
+           DISPLAY TEST SUMMARY
         ----------------------------------------------------- */
 
         document.getElementById(
@@ -635,7 +684,10 @@ async function loadTutorTestReview(){
         document.getElementById(
             "score"
         ).textContent =
-            `${test.score ?? 0}/${test.total_questions ?? questions.length}`;
+            `${test.score ?? 0}/${
+                test.total_questions ??
+                questions.length
+            }`;
 
 
         document.getElementById(
@@ -672,7 +724,7 @@ async function loadTutorTestReview(){
 
 
         /* -----------------------------------------------------
-           QUESTIONS
+           QUESTION LIST
         ----------------------------------------------------- */
 
         const list =
@@ -684,10 +736,14 @@ async function loadTutorTestReview(){
         if(!questions.length){
 
             list.innerHTML = `
+
                 <div class="loading">
+
                     No saved question data is available
                     for this test.
+
                 </div>
+
             `;
 
         }else{
@@ -726,6 +782,7 @@ async function loadTutorTestReview(){
                                     class="review-item"
                                 >
 
+
                                     <div
                                         class="question-header"
                                     >
@@ -741,9 +798,11 @@ async function loadTutorTestReview(){
                                                 }
                                             </div>
 
+
                                             <div
                                                 class="topic"
                                             >
+
                                                 ${escapeHtml(
                                                     q.topic_name ||
                                                     "No topic"
@@ -751,11 +810,15 @@ async function loadTutorTestReview(){
 
                                                 ${
                                                     q.subtopic
-                                                        ? ` • ${escapeHtml(
-                                                            q.subtopic
-                                                          )}`
+                                                        ? `
+                                                            •
+                                                            ${escapeHtml(
+                                                                q.subtopic
+                                                            )}
+                                                          `
                                                         : ""
                                                 }
+
                                             </div>
 
                                         </div>
@@ -764,9 +827,7 @@ async function loadTutorTestReview(){
                                         <span
                                             class="${statusClass}"
                                         >
-                                            ${
-                                                statusText
-                                            }
+                                            ${statusText}
                                         </span>
 
                                     </div>
@@ -786,7 +847,12 @@ async function loadTutorTestReview(){
                                     >
 
                                         ${
-                                            ["A","B","C","D"]
+                                            [
+                                                "A",
+                                                "B",
+                                                "C",
+                                                "D"
+                                            ]
                                             .map(
                                                 letter => {
 
@@ -800,14 +866,18 @@ async function loadTutorTestReview(){
                                                         value === null ||
                                                         value === undefined
                                                     ){
+
                                                         return "";
+
                                                     }
 
 
                                                     return `
+
                                                         <div
                                                             class="option"
                                                         >
+
                                                             <strong>
                                                                 ${letter}.
                                                             </strong>
@@ -815,7 +885,9 @@ async function loadTutorTestReview(){
                                                             ${escapeHtml(
                                                                 value
                                                             )}
+
                                                         </div>
+
                                                     `;
 
                                                 }
@@ -830,7 +902,9 @@ async function loadTutorTestReview(){
                                         class="answer-box"
                                     >
 
+
                                         <div>
+
                                             <strong>
                                                 Learner answer:
                                             </strong>
@@ -838,10 +912,12 @@ async function loadTutorTestReview(){
                                             ${escapeHtml(
                                                 answerText
                                             )}
+
                                         </div>
 
 
                                         <div>
+
                                             <strong>
                                                 Correct answer:
                                             </strong>
@@ -850,10 +926,12 @@ async function loadTutorTestReview(){
                                                 q.correct_answer ||
                                                 "—"
                                             )}
+
                                         </div>
 
 
                                         <div>
+
                                             <strong>
                                                 Time:
                                             </strong>
@@ -872,13 +950,17 @@ async function loadTutorTestReview(){
                                                 q.target_time_seconds ||
                                                 30
                                             }s
+
                                         </div>
 
 
                                         ${
                                             q.timed_out
                                                 ? `
-                                                    <div class="incorrect">
+                                                    <div
+                                                        class="incorrect"
+                                                        style="margin-top:5px"
+                                                    >
                                                         Timed out
                                                     </div>
                                                   `
@@ -889,12 +971,16 @@ async function loadTutorTestReview(){
                                         ${
                                             q.skipped
                                                 ? `
-                                                    <div class="incorrect">
+                                                    <div
+                                                        class="incorrect"
+                                                        style="margin-top:5px"
+                                                    >
                                                         Skipped
                                                     </div>
                                                   `
                                                 : ""
                                         }
+
 
                                     </div>
 
@@ -918,6 +1004,7 @@ async function loadTutorTestReview(){
                                               `
                                             : ""
                                     }
+
 
                                 </div>
 
