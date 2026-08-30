@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>UMTYMP Tutor Test Review</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f5f7fb;
+    color:#1f2937;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+    padding:28px 20px 50px;
+}
+
+.card{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:22px;
+    margin-bottom:18px;
+}
+
+.hidden{
+    display:none;
+}
+
+.header{
+    margin-bottom:18px;
+}
+
+.back-button{
+    margin-bottom:15px;
+}
+
+.test-number{
+    font-size:14px;
+    font-weight:800;
+}
+
+.title{
+    font-size:28px;
+    font-weight:900;
+    margin-top:6px;
+}
+
+.learner{
+    margin-top:6px;
+    color:#64748b;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:
+        repeat(5,minmax(0,1fr));
+    gap:12px;
+    margin-top:18px;
+}
+
+.stat{
+    background:#f8fafc;
+    border-radius:10px;
+    padding:15px;
+}
+
+.stat strong{
+    display:block;
+    font-size:21px;
+}
+
+.stat span{
+    display:block;
+    margin-top:5px;
+    color:#64748b;
+    font-size:12px;
+}
+
+.review-item{
+    border-top:1px solid #e5e7eb;
+    padding:22px 0;
+}
+
+.review-item:first-child{
+    border-top:0;
+}
+
+.question-header{
+    display:flex;
+    justify-content:space-between;
+    gap:15px;
+    align-items:flex-start;
+}
+
+.question-number{
+    font-weight:900;
+}
+
+.topic{
+    color:#64748b;
+    font-size:12px;
+    margin-top:5px;
+}
+
+.question-text{
+    font-size:17px;
+    font-weight:750;
+    line-height:1.55;
+    margin-top:12px;
+}
+
+.options{
+    margin-top:14px;
+    display:grid;
+    gap:8px;
+}
+
+.option{
+    padding:11px 13px;
+    border:1px solid #e5e7eb;
+    border-radius:9px;
+}
+
+.answer-box{
+    margin-top:15px;
+    padding:14px;
+    background:#f8fafc;
+    border-radius:10px;
+    line-height:1.6;
+    font-size:14px;
+}
+
+.correct{
+    color:#15803d;
+    font-weight:800;
+}
+
+.incorrect{
+    color:#b91c1c;
+    font-weight:800;
+}
+
+.explanation{
+    margin-top:12px;
+    padding:14px;
+    background:#eff6ff;
+    border-radius:10px;
+    line-height:1.55;
+    font-size:14px;
+}
+
+.button{
+    border:0;
+    border-radius:9px;
+    padding:11px 15px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.primary{
+    background:#2563eb;
+    color:white;
+}
+
+.secondary{
+    background:#e5e7eb;
+    color:#111827;
+}
+
+.loading{
+    text-align:center;
+    padding:40px;
+    color:#64748b;
+}
+
+.error{
+    color:#b91c1c;
+    font-weight:700;
+}
+
+@media(max-width:850px){
+
+    .stats{
+        grid-template-columns:
+            repeat(2,1fr);
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <!-- =====================================================
+         LOADING
+    ====================================================== -->
+
+    <div
+        id="loading"
+        class="card loading"
+    >
+        Loading test review...
+    </div>
+
+
+    <!-- =====================================================
+         ERROR
+    ====================================================== -->
+
+    <div
+        id="error"
+        class="card hidden"
+    >
+
+        <div class="error"
+             id="errorMessage">
+        </div>
+
+        <button
+            class="button secondary"
+            style="margin-top:15px"
+            onclick="
+                window.location.href='index.html'
+            "
+        >
+            Return to Dashboard
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         CONTENT
+    ====================================================== -->
+
+    <div
+        id="content"
+        class="hidden"
+    >
+
+
+        <div class="header">
+
+            <button
+                class="button secondary back-button"
+                onclick="
+                    window.location.href='index.html'
+                "
+            >
+                ← Back to Dashboard
+            </button>
+
+
+            <div
+                id="testNumber"
+                class="test-number"
+            ></div>
+
+
+            <div
+                id="testTitle"
+                class="title"
+            ></div>
+
+
+            <div
+                id="learnerInfo"
+                class="learner"
+            ></div>
+
+        </div>
+
+
+        <!-- =================================================
+             SUMMARY
+        ================================================== -->
+
+        <div class="card">
+
+            <div class="stats">
+
+                <div class="stat">
+
+                    <strong id="score">
+                        —
+                    </strong>
+
+                    <span>
+                        Correct
+                    </span>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <strong id="accuracy">
+                        —
+                    </strong>
+
+                    <span>
+                        Accuracy
+                    </span>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <strong id="averageTime">
+                        —
+                    </strong>
+
+                    <span>
+                        Average Time
+                    </span>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <strong id="questionCount">
+                        —
+                    </strong>
+
+                    <span>
+                        Questions
+                    </span>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <strong id="completedDate">
+                        —
+                    </strong>
+
+                    <span>
+                        Completed
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             QUESTIONS
+        ================================================== -->
+
+        <div class="card">
+
+            <h2 style="margin-top:0">
+                Question Review
+            </h2>
+
+
+            <div
+                id="questionList"
+            ></div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ============================================================
+   SUPABASE
+============================================================ */
+
+const SUPABASE_URL =
+    "https://hhtplinfcdwgahlhurhx.supabase.co";
+
+
+const SUPABASE_ANON_KEY =
+    "sb_publishable_cOXipkG4wSKIkIHwkP04JA_KunvG7T5";
+
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+/* ============================================================
+   HELPERS
+============================================================ */
+
+function escapeHtml(value){
+
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+}
+
+
+function formatDate(value){
+
+    if(!value){
+        return "—";
+    }
+
+    return new Date(value)
+        .toLocaleDateString(
+            undefined,
+            {
+                year:"numeric",
+                month:"long",
+                day:"numeric"
+            }
+        );
+
+}
+
+
+function formatTime(value){
+
+    if(value === null || value === undefined){
+        return "0.0s";
+    }
+
+    return `${Number(value).toFixed(1)}s`;
+
+}
+
+
+/* ============================================================
+   GET URL PARAMETERS
+============================================================ */
+
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
+
+
+const testNumber =
+    Number(
+        params.get("test_number")
+    );
+
+
+const studentId =
+    params.get("student_id");
+
+
+/* ============================================================
+   LOAD REVIEW
+============================================================ */
+
+async function loadTutorTestReview(){
+
+    try{
+
+        /* -----------------------------------------------------
+           Validate URL
+        ----------------------------------------------------- */
+
+        if(!testNumber){
+
+            throw new Error(
+                "No Test Number was provided."
+            );
+
+        }
+
+
+        if(!studentId){
+
+            throw new Error(
+                "No learner was provided."
+            );
+
+        }
+
+
+        /* -----------------------------------------------------
+           Check authentication
+        ----------------------------------------------------- */
+
+        const {
+            data:{
+                session
+            },
+            error:sessionError
+        } =
+            await supabaseClient.auth.getSession();
+
+
+        if(sessionError){
+            throw sessionError;
+        }
+
+
+        if(!session){
+
+            throw new Error(
+                "Please sign in before viewing learner tests."
+            );
+
+        }
+
+
+        /* -----------------------------------------------------
+           LOAD TEST SUMMARY
+        ----------------------------------------------------- */
+
+        const testResult =
+            await supabaseClient.rpc(
+                "tuition_get_tutor_saved_test_v2",
+                {
+                    p_test_number:
+                        testNumber,
+
+                    p_student_id:
+                        studentId
+                }
+            );
+
+
+        if(testResult.error){
+            throw testResult.error;
+        }
+
+
+        const tests =
+            testResult.data || [];
+
+
+        if(!tests.length){
+
+            throw new Error(
+                "This saved test could not be found."
+            );
+
+        }
+
+
+        const test =
+            tests[0];
+
+
+        /* -----------------------------------------------------
+           LOAD QUESTIONS
+        ----------------------------------------------------- */
+
+        const questionResult =
+            await supabaseClient.rpc(
+                "tuition_get_tutor_saved_test_questions_v2",
+                {
+                    p_test_number:
+                        testNumber,
+
+                    p_student_id:
+                        studentId
+                }
+            );
+
+
+        if(questionResult.error){
+            throw questionResult.error;
+        }
+
+
+        const questions =
+            questionResult.data || [];
+
+
+        /* -----------------------------------------------------
+           SUMMARY
+        ----------------------------------------------------- */
+
+        document.getElementById(
+            "testNumber"
+        ).textContent =
+            `Test #${test.test_number}`;
+
+
+        document.getElementById(
+            "testTitle"
+        ).textContent =
+            test.title ||
+            "UMTYMP Preparation Practice";
+
+
+        document.getElementById(
+            "learnerInfo"
+        ).textContent =
+            `${test.student_name || "Learner"}${
+                test.grade_level
+                    ? ` • Grade ${test.grade_level}`
+                    : ""
+            }`;
+
+
+        document.getElementById(
+            "score"
+        ).textContent =
+            `${test.score ?? 0}/${test.total_questions ?? questions.length}`;
+
+
+        document.getElementById(
+            "accuracy"
+        ).textContent =
+            test.percentage != null
+                ? `${Number(
+                    test.percentage
+                ).toFixed(0)}%`
+                : "—";
+
+
+        document.getElementById(
+            "averageTime"
+        ).textContent =
+            formatTime(
+                test.average_time_seconds
+            );
+
+
+        document.getElementById(
+            "questionCount"
+        ).textContent =
+            test.question_count ??
+            questions.length;
+
+
+        document.getElementById(
+            "completedDate"
+        ).textContent =
+            formatDate(
+                test.completed_at
+            );
+
+
+        /* -----------------------------------------------------
+           QUESTIONS
+        ----------------------------------------------------- */
+
+        const list =
+            document.getElementById(
+                "questionList"
+            );
+
+
+        if(!questions.length){
+
+            list.innerHTML = `
+                <div class="loading">
+                    No saved question data is available
+                    for this test.
+                </div>
+            `;
+
+        }else{
+
+            list.innerHTML =
+                questions
+                    .map(
+                        q => {
+
+                            const answerText =
+                                q.skipped
+                                    ? "Skipped"
+                                    : q.timed_out
+                                        ? "Timed out"
+                                        : (
+                                            q.selected_answer ||
+                                            "No answer"
+                                        );
+
+
+                            const statusText =
+                                q.is_correct
+                                    ? "Correct"
+                                    : "Incorrect";
+
+
+                            const statusClass =
+                                q.is_correct
+                                    ? "correct"
+                                    : "incorrect";
+
+
+                            return `
+
+                                <div
+                                    class="review-item"
+                                >
+
+                                    <div
+                                        class="question-header"
+                                    >
+
+                                        <div>
+
+                                            <div
+                                                class="question-number"
+                                            >
+                                                Question
+                                                ${
+                                                    q.question_number
+                                                }
+                                            </div>
+
+                                            <div
+                                                class="topic"
+                                            >
+                                                ${escapeHtml(
+                                                    q.topic_name ||
+                                                    "No topic"
+                                                )}
+
+                                                ${
+                                                    q.subtopic
+                                                        ? ` • ${escapeHtml(
+                                                            q.subtopic
+                                                          )}`
+                                                        : ""
+                                                }
+                                            </div>
+
+                                        </div>
+
+
+                                        <span
+                                            class="${statusClass}"
+                                        >
+                                            ${
+                                                statusText
+                                            }
+                                        </span>
+
+                                    </div>
+
+
+                                    <div
+                                        class="question-text"
+                                    >
+                                        ${escapeHtml(
+                                            q.question_text
+                                        )}
+                                    </div>
+
+
+                                    <div
+                                        class="options"
+                                    >
+
+                                        ${
+                                            ["A","B","C","D"]
+                                            .map(
+                                                letter => {
+
+                                                    const value =
+                                                        q[
+                                                            `option_${letter.toLowerCase()}`
+                                                        ];
+
+
+                                                    if(
+                                                        value === null ||
+                                                        value === undefined
+                                                    ){
+                                                        return "";
+                                                    }
+
+
+                                                    return `
+                                                        <div
+                                                            class="option"
+                                                        >
+                                                            <strong>
+                                                                ${letter}.
+                                                            </strong>
+
+                                                            ${escapeHtml(
+                                                                value
+                                                            )}
+                                                        </div>
+                                                    `;
+
+                                                }
+                                            )
+                                            .join("")
+                                        }
+
+                                    </div>
+
+
+                                    <div
+                                        class="answer-box"
+                                    >
+
+                                        <div>
+                                            <strong>
+                                                Learner answer:
+                                            </strong>
+
+                                            ${escapeHtml(
+                                                answerText
+                                            )}
+                                        </div>
+
+
+                                        <div>
+                                            <strong>
+                                                Correct answer:
+                                            </strong>
+
+                                            ${escapeHtml(
+                                                q.correct_answer ||
+                                                "—"
+                                            )}
+                                        </div>
+
+
+                                        <div>
+                                            <strong>
+                                                Time:
+                                            </strong>
+
+                                            ${formatTime(
+                                                q.time_seconds
+                                            )}
+
+                                            &nbsp; | &nbsp;
+
+                                            <strong>
+                                                Target:
+                                            </strong>
+
+                                            ${
+                                                q.target_time_seconds ||
+                                                30
+                                            }s
+                                        </div>
+
+
+                                        ${
+                                            q.timed_out
+                                                ? `
+                                                    <div class="incorrect">
+                                                        Timed out
+                                                    </div>
+                                                  `
+                                                : ""
+                                        }
+
+
+                                        ${
+                                            q.skipped
+                                                ? `
+                                                    <div class="incorrect">
+                                                        Skipped
+                                                    </div>
+                                                  `
+                                                : ""
+                                        }
+
+                                    </div>
+
+
+                                    ${
+                                        q.explanation
+                                            ? `
+                                                <div
+                                                    class="explanation"
+                                                >
+
+                                                    <strong>
+                                                        Explanation:
+                                                    </strong>
+
+                                                    ${escapeHtml(
+                                                        q.explanation
+                                                    )}
+
+                                                </div>
+                                              `
+                                            : ""
+                                    }
+
+                                </div>
+
+                            `;
+
+                        }
+                    )
+                    .join("");
+
+        }
+
+
+        /* -----------------------------------------------------
+           SHOW PAGE
+        ----------------------------------------------------- */
+
+        document.getElementById(
+            "loading"
+        ).classList.add(
+            "hidden"
+        );
+
+
+        document.getElementById(
+            "content"
+        ).classList.remove(
+            "hidden"
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Tutor test review:",
+            error
+        );
+
+
+        document.getElementById(
+            "loading"
+        ).classList.add(
+            "hidden"
+        );
+
+
+        document.getElementById(
+            "errorMessage"
+        ).textContent =
+            error.message ||
+            "Unable to load the saved test.";
+
+
+        document.getElementById(
+            "error"
+        ).classList.remove(
+            "hidden"
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   START
+============================================================ */
+
+loadTutorTestReview();
+
+</script>
+
+</body>
+</html>
