@@ -862,6 +862,16 @@ main{
         UMTYMP Preparation Practice
     </p>
 
+<div
+    id="resultTestNumber"
+    style="
+        margin-top:8px;
+        font-size:14px;
+        font-weight:800;
+    "
+></div>
+
+    
 
     <div class="result-stats">
 
@@ -2413,6 +2423,7 @@ async function finishSession(){
             }
         );
 
+    
 
     if(result.error){
 
@@ -2431,7 +2442,62 @@ async function finishSession(){
 
     }
 
+/* ---------------------------------------------------------
+   ARCHIVE COMPLETED TEST
+--------------------------------------------------------- */
 
+const archiveResult =
+    await supabaseClient.rpc(
+        "tuition_archive_completed_test",
+        {
+            p_session_id:
+                sessionId,
+
+            p_student_id:
+                currentStudent.id
+        }
+    );
+
+
+let archivedTestNumber = null;
+
+
+if(archiveResult.error){
+
+    console.error(
+        "Test archive:",
+        archiveResult.error
+    );
+
+}else{
+
+    archivedTestNumber =
+        Number(archiveResult.data);
+
+    console.log(
+        "Test archived as Test #" +
+        archivedTestNumber
+    );
+
+}
+
+if(archiveResult.error){
+
+    console.error(
+        "Test archive:",
+        archiveResult.error
+    );
+
+}else{
+
+    console.log(
+        "Test archived as Test #" +
+        archiveResult.data
+    );
+
+}
+
+    
     /*
        Update preparation statistics.
     */
@@ -2485,11 +2551,16 @@ async function finishSession(){
 
     }
 
+const finalResult =
+    result.data || {};
 
-    await showResults(
-        result.data || {}
-    );
+finalResult.test_number =
+    archivedTestNumber;
 
+
+await showResults(
+    finalResult
+);
 }
 
 
@@ -2609,6 +2680,13 @@ async function showResults(
     );
 
 
+const testNumber =
+    sessionResult.test_number ||
+    sessionData?.test_number ||
+    null;
+
+
+    
     const total =
         Number(
             sessionResult.total_questions ||
@@ -2644,6 +2722,29 @@ async function showResults(
         );
 
 
+const resultTestNumber =
+    document.getElementById(
+        "resultTestNumber"
+    );
+
+
+if(
+    resultTestNumber &&
+    sessionResult.test_number
+){
+
+    resultTestNumber.textContent =
+        `Test #${sessionResult.test_number}`;
+
+}else if(resultTestNumber){
+
+    resultTestNumber.textContent =
+        "";
+
+}
+
+
+    
     document.getElementById(
         "resultTitle"
     ).textContent =
@@ -2883,7 +2984,7 @@ document
         () => {
 
             window.location.href =
-                "index.html";
+                "index2.html";
 
         }
     );
