@@ -3779,9 +3779,6 @@ async function createDiagnostic(){
 
 
 
-historyMode = "student";
-historyMode = "tutor";
-
 
 
     
@@ -3982,7 +3979,10 @@ function openSavedTest(testNumber){
         return;
     }
 
-    if(historyMode === "student"){
+
+    /* STUDENT */
+
+    if(currentProfile?.role === "student"){
 
         window.location.href =
             `test_review.html?test_number=${
@@ -3995,7 +3995,12 @@ function openSavedTest(testNumber){
     }
 
 
-    if(historyMode === "tutor"){
+    /* TUTOR / ADMIN */
+
+    if(
+        currentProfile?.role === "tutor" ||
+        currentProfile?.role === "admin"
+    ){
 
         window.location.href =
             `tutor-test-review.html?test_number=${
@@ -4008,11 +4013,11 @@ function openSavedTest(testNumber){
     }
 
 
-    alert("Unable to determine the history view.");
+    alert(
+        "Unable to determine the current user role."
+    );
+
 }
-
-
-
 
 
 
