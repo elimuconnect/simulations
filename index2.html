@@ -4005,6 +4005,73 @@ function openSavedTest(testNumber){
 
 
 
+
+
+
+
+function openTutorSavedTest(testNumber){
+
+
+    if(!currentStudent){
+
+        alert(
+            "No learner is currently selected."
+        );
+
+        return;
+    }
+
+    if(!testNumber){
+
+        alert(
+            "Invalid test number."
+        );
+
+        return;
+    }
+
+    window.location.href =
+        `tutor-test-review.html?test_number=${
+            encodeURIComponent(testNumber)
+        }&student_id=${
+            encodeURIComponent(currentStudent.id)
+        }`;
+
+}
+
+
+
+function openStudentSavedTest(testNumber){
+
+    if(!currentStudent){
+        alert("No learner is currently selected.");
+        return;
+    }
+
+    if(!testNumber){
+        alert("Invalid test number.");
+        return;
+    }
+
+    window.location.href =
+        `test_review.html?test_number=${
+            encodeURIComponent(testNumber)
+        }&student_id=${
+            encodeURIComponent(currentStudent.id)
+        }`;
+}
+
+
+    
+    
+
+
+
+
+
+
+
+
     
     
 /* ============================================================
