@@ -3924,14 +3924,14 @@ async function createDiagnostic(){
 <button
     class="btn btn-light"
     onclick="
-        openStudentSavedTest(
+        openSavedTest(
             ${Number(row.test_number)}
         );
     "
 >
     View Test
 </button>
-
+   
 </td>
 
 </tr>
@@ -3954,11 +3954,7 @@ async function createDiagnostic(){
 
 
 
-/* ============================================================
-   OPEN SAVED TEST — TUTOR
-============================================================ */
-
-function openTutorSavedTest(testNumber){
+function openSavedTest(testNumber){
 
     if(!currentStudent){
 
@@ -3978,37 +3974,35 @@ function openTutorSavedTest(testNumber){
         return;
     }
 
-    window.location.href =
-        `tutor-test-review.html?test_number=${
-            encodeURIComponent(testNumber)
-        }&student_id=${
-            encodeURIComponent(currentStudent.id)
-        }`;
+    if(historyMode === "student"){
 
-}
+        window.location.href =
+            `test_review.html?test_number=${
+                encodeURIComponent(testNumber)
+            }&student_id=${
+                encodeURIComponent(currentStudent.id)
+            }`;
 
-
-
-
-function openStudentSavedTest(testNumber){
-
-    if(!currentStudent){
-        alert("No learner is currently selected.");
         return;
     }
 
-    if(!testNumber){
-        alert("Invalid test number.");
+
+    if(historyMode === "tutor"){
+
+        window.location.href =
+            `tutor-test-review.html?test_number=${
+                encodeURIComponent(testNumber)
+            }&student_id=${
+                encodeURIComponent(currentStudent.id)
+            }`;
+
         return;
     }
 
-    window.location.href =
-        `test_review.html?test_number=${
-            encodeURIComponent(testNumber)
-        }&student_id=${
-            encodeURIComponent(currentStudent.id)
-        }`;
+
+    alert("Unable to determine the history view.");
 }
+
 
 
     
