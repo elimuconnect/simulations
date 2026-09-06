@@ -3921,16 +3921,16 @@ async function createDiagnostic(){
 
    <td>
 
-    <button
-        class="btn btn-light"
-        onclick="
-            openTutorSavedTest(
-                ${Number(row.test_number)}
-            );
-        "
-    >
-        View Test
-    </button>
+<button
+    class="btn btn-light"
+    onclick="
+        openStudentSavedTest(
+            ${Number(row.test_number)}
+        );
+    "
+>
+    View Test
+</button>
 
 </td>
 
@@ -3989,6 +3989,29 @@ function openTutorSavedTest(testNumber){
 
 
 
+
+function openStudentSavedTest(testNumber){
+
+    if(!currentStudent){
+        alert("No learner is currently selected.");
+        return;
+    }
+
+    if(!testNumber){
+        alert("Invalid test number.");
+        return;
+    }
+
+    window.location.href =
+        `test_review.html?test_number=${
+            encodeURIComponent(testNumber)
+        }&student_id=${
+            encodeURIComponent(currentStudent.id)
+        }`;
+}
+
+
+    
     
 /* ============================================================
    STUDENT BUTTONS
