@@ -1421,11 +1421,7 @@ async function openSession(){
         "UMTYMP Timed Practice";
 
 
-    totalRemainingSeconds =
-        Number(
-            sessionData.time_limit_seconds ||
-            questions.length * 30
-        );
+    totalRemainingSeconds = 15 * 60;
 
 
     buildQuestionGrid();
